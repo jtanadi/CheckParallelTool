@@ -24,6 +24,11 @@ class CheckParallel(EditingTool):
         # if clickCount == 2:
 
     def draw(self, scale):
+        """
+        Only using this like a middleperson so I can name the process
+        (ie. with functions)
+        scale is given by RF (part of BaseEventTool.draw())
+        """
         self.analyzeSelection()
 
         # If AT LEAST one segment from ONLY one contour has been selected
