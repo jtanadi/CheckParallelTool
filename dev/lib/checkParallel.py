@@ -21,9 +21,9 @@ class CheckParallel(EditingTool):
         pointsList = []
         for point in contour.points:
             pointsList.append(point)
-        
+
         return pointsList
-        
+
     def _findPrevOnCurvePt(self, point, pointsList):
         onCurves = []
         # Find all the non offcurves
@@ -55,12 +55,11 @@ class CheckParallel(EditingTool):
         # instead of checking for absolute equality (m1 == m2),
         # allow for some tolerance
         return abs(m1 - m2) <= self.tolerance
-    
+
     def mouseDown(self, point, clickCount):
         pass
         # Implement a double click to change tolerance later
         # if clickCount == 2:
-            
 
     def draw(self, scale):
         # g = info["glyph"]
@@ -68,7 +67,7 @@ class CheckParallel(EditingTool):
         self.selectedContours = []
         self.selectedSegments = []
 
-        # Find selected segment... 
+        # Find selected segment...
         # is this the best way (ie. do I have to iterate?)
         for contour in self.glyph.contours:
             for segment in contour:
@@ -90,7 +89,7 @@ class CheckParallel(EditingTool):
                             self.selectedContours.append(segment.contour)
 
         self.drawLines(scale)
-        
+
     def drawLines(self, lineThickness):
         # Don't do anything if no segments have been selected,
         # or if more than 1 contour has been selected
@@ -107,7 +106,7 @@ class CheckParallel(EditingTool):
                     selectedOffCurves.append(point)
                 else:
                     selectedOnCurves.append(point)
-                    
+
             pt0 = self._findPrevOnCurvePt(selectedOnCurves[0], contourPoints).position
             pt1 = selectedOnCurves[0].position
             pt2 = selectedOffCurves[0].position
