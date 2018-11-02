@@ -18,23 +18,19 @@ class CheckParallel(EditingTool):
         self.selectedContours = []
         self.selectedSegments = []
 
-    def _checkParallel(self, line1, line2):        
-        ((x0, y0), (x1, y1)) = line1
-        ((x2, y2), (x3, y3)) = line2
-
-        m1 = hf.calcSlope((x0, y0), (x1, y1))
-        m2 = hf.calcSlope((x2, y2), (x3, y3))
-
-        # instead of checking for absolute equality (m1 == m2),
-        # allow for some tolerance
-        return abs(m1 - m2) <= self.tolerance
-
     def mouseDown(self, point, clickCount):
         pass
         # Implement a double click to change tolerance later
         # if clickCount == 2:
 
     def draw(self, scale):
+        self.analyzeSelection()
+
+        # If AT LEAST one segment from ONLY one contour has been selected
+        if self.selectedSegments and len(self.selectedContours) == 1:
+            self.drawLines(scale)
+    
+    def analyzeSelection(self):
         self.selectedContours.clear()
         self.selectedSegments.clear()
 
@@ -59,14 +55,7 @@ class CheckParallel(EditingTool):
                         if segment.contour not in self.selectedContours:
                             self.selectedContours.append(segment.contour)
 
-        self.drawLines(scale)
-
     def drawLines(self, lineThickness):
-        # Don't do anything if no segments have been selected,
-        # or if more than 1 contour has been selected
-        if not self.selectedSegments or len(self.selectedContours) > 1:
-            return
-
         contourPoints = hf.collectAllPointsInContour(self.selectedContours[0])
 
         for segment in self.selectedSegments:
@@ -84,7 +73,7 @@ class CheckParallel(EditingTool):
             pt3 = selectedOffCurves[1].position
 
             # if lines are parallel, lines are green; otherwise, red
-            if self._checkParallel((pt0, pt1), (pt2, pt3)):
+            if hf.areTheyParallel((pt0, pt1), (pt2, pt3), self.tolerance):
                 dt.stroke(0, 1, 0, 1)
             else:
                 dt.stroke(1, 0, 0, 1)
