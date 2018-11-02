@@ -57,8 +57,10 @@ class CheckParallel(EditingTool):
         return abs(m1 - m2) <= self.tolerance
     
     def mouseDown(self, point, clickCount):
-        if clickCount == 2:
-            print("twice")
+        pass
+        # Implement a double click to change tolerance later
+        # if clickCount == 2:
+            
 
     def draw(self, scale):
         # g = info["glyph"]
