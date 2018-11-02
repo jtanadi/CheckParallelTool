@@ -1,3 +1,4 @@
+import helperFuncs as hf
 import mojo.drawingTools as dt
 from mojo.events import EditingTool, installTool
 from mojo.UI import UpdateCurrentGlyphView
@@ -17,40 +18,12 @@ class CheckParallel(EditingTool):
         self.selectedContours = []
         self.selectedSegments = []
 
-    def _collectPointsInContour(self, contour):
-        pointsList = []
-        for point in contour.points:
-            pointsList.append(point)
-
-        return pointsList
-
-    def _findPrevOnCurvePt(self, point, pointsList):
-        onCurves = []
-        # Find all the non offcurves
-        for pt in pointsList:
-            if pt.type != "offcurve":
-                onCurves.append(pt)
-        # Find the matching point from a list of onCurves and
-        # and return the *preceding* point
-        for index, pt in enumerate(onCurves):
-            if pt == point:
-                return onCurves[index - 1]
-
-    def _calcSlope(self, pt1, pt2):
-        (xA, yA) = pt1
-        (xB, yB) = pt2
-
-        try:
-            return (yB - yA) / (xB - xA)
-        except ZeroDivisionError:
-            return 0 # Not entirely accurate for vertical lines, but works
-
     def _checkParallel(self, line1, line2):        
         ((x0, y0), (x1, y1)) = line1
         ((x2, y2), (x3, y3)) = line2
 
-        m1 = self._calcSlope((x0, y0), (x1, y1))
-        m2 = self._calcSlope((x2, y2), (x3, y3))
+        m1 = hf.calcSlope((x0, y0), (x1, y1))
+        m2 = hf.calcSlope((x2, y2), (x3, y3))
 
         # instead of checking for absolute equality (m1 == m2),
         # allow for some tolerance
@@ -62,10 +35,8 @@ class CheckParallel(EditingTool):
         # if clickCount == 2:
 
     def draw(self, scale):
-        # g = info["glyph"]
-
-        self.selectedContours = []
-        self.selectedSegments = []
+        self.selectedContours.clear()
+        self.selectedSegments.clear()
 
         # Find selected segment...
         # is this the best way (ie. do I have to iterate?)
@@ -96,7 +67,7 @@ class CheckParallel(EditingTool):
         if not self.selectedSegments or len(self.selectedContours) > 1:
             return
 
-        contourPoints = self._collectPointsInContour(self.selectedContours[0])
+        contourPoints = hf.collectAllPointsInContour(self.selectedContours[0])
 
         for segment in self.selectedSegments:
             selectedOnCurves = []
@@ -107,7 +78,7 @@ class CheckParallel(EditingTool):
                 else:
                     selectedOnCurves.append(point)
 
-            pt0 = self._findPrevOnCurvePt(selectedOnCurves[0], contourPoints).position
+            pt0 = hf.findPrevOnCurvePt(selectedOnCurves[0], contourPoints).position
             pt1 = selectedOnCurves[0].position
             pt2 = selectedOffCurves[0].position
             pt3 = selectedOffCurves[1].position
