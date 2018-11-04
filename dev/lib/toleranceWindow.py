@@ -28,7 +28,7 @@ class ToleranceWindow(BaseWindowController):
         self.w.accuracySlider = Slider((10, 9, -10, 23),
                                         minValue=0,
                                         maxValue=self.maxValue,
-                                        value=hf.readSetting(settingDir),
+                                        value=self.maxValue - hf.readSetting(settingDir),
                                         sizeStyle="small",
                                         callback=self.accuracySliderCB)
         self.w.lessText = TextBox((10, 30, -10, 12),

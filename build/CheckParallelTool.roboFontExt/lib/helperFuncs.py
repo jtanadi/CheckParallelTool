@@ -14,7 +14,7 @@ def readSetting(settingDir):
         tolerance = float(settingFile.read())
     except FileNotFoundError:
         settingFile = open(settingDir, "w+")
-        tolerance = 0.05
+        tolerance = 0.025
         settingFile.write(str(tolerance))
     settingFile.close()
     return tolerance
