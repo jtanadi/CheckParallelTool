@@ -42,6 +42,7 @@ class ToleranceWindow(BaseWindowController):
         # Post this event so CheckParallel() can't open 2 ToleranceWindow()
         postEvent("comToleranceWindowOpened")
         self.w.open()
+        self.w.center()
 
     def accuracySliderCB(self, sender):
         """
