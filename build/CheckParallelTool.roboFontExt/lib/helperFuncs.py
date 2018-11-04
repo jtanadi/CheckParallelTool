@@ -1,7 +1,17 @@
 """
-Helper functions for checkParallel
+Helper functions for CheckParallel and ToleranceWindow
 They're here because I don't like having to scroll around too much
 """
+
+def readSetting(settingDir):
+    """
+    Read value of setting file.
+    This is shared between CheckParallel() and ToleranceWindow()
+    """
+    settingFile = open(settingDir, "r")
+    tolerance = float(settingFile.read())
+    settingFile.close()
+    return tolerance
 
 def calcSlope(pt1, pt2):
     """

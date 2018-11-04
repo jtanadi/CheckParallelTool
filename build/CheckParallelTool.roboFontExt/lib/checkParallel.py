@@ -1,26 +1,80 @@
+"""
+A simple tool to check & visualize if the line connecting handles
+and the line connecting on-curve points are parallel.
+
+Inspired by the What I learned from Rod Cavazos section of
+OHno Type Co's "Drawing Vectors for Type & Lettering":
+https://ohnotype.co/blog/drawing-vectors
+
+When active, this tool adds an observer to keep an eye on
+the tolerance setting posted by ToleranceWindow.
+"""
+
 import helperFuncs as hf
+from toleranceWindow import ToleranceWindow
 import mojo.drawingTools as dt
-from mojo.events import EditingTool, installTool
+from mojo.events import EditingTool, installTool, addObserver, removeObserver
 from mojo.UI import UpdateCurrentGlyphView
 from AppKit import NSImage
 import os.path
 
 currentDir = os.path.dirname(__file__)
+settingDir = os.path.join(currentDir, "..", "resources", "toleranceSetting.txt")
 iconFileDir = os.path.join(currentDir, "..", "resources", "checkParallelIcon.pdf")
 toolbarIcon = NSImage.alloc().initWithContentsOfFile_(iconFileDir)
 
 class CheckParallel(EditingTool):
     def setup(self):
+        """
+        Watch for events posted by ToleranceWindow():
+        - Settings have changed -> run self.applyTolerance()
+        - ToleranceWindow() is open -> toggle switch (prevents 2 windows)
+        - ToleranceWindow() is closed -> toggle switch (to allow open next time)
+        """
         self.glyph = CurrentGlyph()
-        self.tolerance = 0.05
+        self.tolerance = hf.readSetting(settingDir)
+
+        # Set a switch to prevent user from opening 2 ToleranceWindow()
+        self.canOpenSetting = True
 
         # Use a dict so we can keep track of what each selectedSegment belongs to
         self.selectedContours = {}
 
+        addObserver(self, "applyTolerance", "comToleranceSettingChanged")
+        addObserver(self, "toggleOpenSwitch", "comToleranceWindowOpened")
+        addObserver(self, "toggleOpenSwitch", "comToleranceWindowClosed")
+
+    def getToolbarIcon(self):
+        return toolbarIcon
+
+    def getToolbarTip(self):
+        return "Check Parallel Tool"
+
+    def becomeInactive(self):
+        removeObserver(self, "comToleranceSettingChanged")
+        removeObserver(self, "comToleranceWindowOpened")
+        removeObserver(self, "comToleranceWindowClosed")
+
+    def toggleOpenSwitch(self, info):
+        """
+        A switch that's run everytime the tool is notified
+        when the ToleranceWindow() is opened or closed
+        """
+        self.canOpenSetting = not self.canOpenSetting
+
     def mouseDown(self, point, clickCount):
-        pass
-        # Implement a double click to change tolerance later
-        # if clickCount == 2:
+        """
+        Double-click to open ToleranceWindow() if it hasn't been opened
+        """
+        if clickCount == 2 and self.canOpenSetting:
+            ToleranceWindow()
+
+    def applyTolerance(self, info):
+        """
+        Redefine tolerance whenever comToleranceSettingChanged is triggered
+        """
+        self.tolerance = hf.readSetting(settingDir)
+
 
     def draw(self, scale):
         """
@@ -102,11 +156,5 @@ class CheckParallel(EditingTool):
                 dt.strokeWidth(lineThickness)
                 dt.line(pt0, pt1)
                 dt.line(pt2, pt3)
-
-    def getToolbarIcon(self):
-        return toolbarIcon
-
-    def getToolbarTip(self):
-        return "Check Parallel Tool"
 
 installTool(CheckParallel())
