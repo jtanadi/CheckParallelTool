@@ -21,7 +21,7 @@ class ToleranceWindow(BaseWindowController):
         """
         Use "accuracy" in UI because it's easier to understand,
         but convert to "tolerance" because it's easier to use
-        for parallel slope math later.
+        in parallel slope math later.
         """
         self.maxValue = 0.05
         self.w = FloatingWindow((150, 60), "Set Accuracy")
