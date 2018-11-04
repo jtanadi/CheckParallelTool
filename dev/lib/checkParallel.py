@@ -45,36 +45,35 @@ class CheckParallel(EditingTool):
 
         # Find which segments in each contour are selected
         for contour in self.glyph:
-            # Collect all selected segments
-            selectedSegments = [segment for segment in contour if segment.selected]
+            selectedSegments = []
 
-            # If no segments are selected, look at points
-            if not selectedSegments:
-                selectedSegments = []
-                for segment in contour:
-                    for point in segment:
-                        # Treat offcurve selection normally (only add current segment)
-                        if point.selected and point.type == "offcurve":
-                            selectedSegments.append(segment)
+            for segment in contour:
+                if segment.selected:
+                    selectedSegments.append(segment)
 
-                        # If an oncurve is selected, add current and next segments
-                        # so user can balance pt between 2 segments
-                        elif point.selected:
-                            # If any point adjacent to current point is selected, then
-                            # a segment has been selected, and it's been taken care of above
-                            # This prevents 2 segments from being selected when user
-                            # selects a segment.
-                            if hf.findPrevPt(point, contour).selected\
-                            or hf.findNextPt(point, contour).selected:
-                                continue
+                for point in segment:
+                    # Treat offcurve selection normally (only add current segment)
+                    if point.selected and point.type == "offcurve":
+                        selectedSegments.append(segment)
 
-                            # If it's the last segment (no next index), add first segment
-                            try:
-                                selectedSegments.append(contour[segment.index + 1])
-                            except IndexError:
-                                selectedSegments.append(contour[0])
+                    # If an oncurve is selected, add current and next segments
+                    # so user can balance pt between 2 segments
+                    elif point.selected:
+                        # If any point adjacent to current point is selected, then
+                        # a segment has been selected, and it's been taken care of above
+                        # This prevents 2 segments from being selected when user
+                        # selects a segment.
+                        if hf.findPrevPt(point, contour).selected\
+                        or hf.findNextPt(point, contour).selected:
+                            continue
 
-                            selectedSegments.append(segment)
+                        # If it's the last segment (no next index), add first segment
+                        try:
+                            selectedSegments.append(contour[segment.index + 1])
+                        except IndexError:
+                            selectedSegments.append(contour[0])
+
+                        selectedSegments.append(segment)
 
             self.selectedContours[contour.index] = selectedSegments
 
