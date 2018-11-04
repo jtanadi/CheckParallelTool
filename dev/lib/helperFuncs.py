@@ -61,7 +61,8 @@ def findNextPt(point, contour, pointType=None):
 
     for index, pt in enumerate(pointsOfType):
         if pt == point:
+            # If next point doesn't exist (last point), return first point
             try:
                 return pointsOfType[index + 1]
             except IndexError:
-                return contour[0]
+                return contour.points[0]
