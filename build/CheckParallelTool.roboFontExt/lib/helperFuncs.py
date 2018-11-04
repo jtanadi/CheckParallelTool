@@ -5,11 +5,17 @@ They're here because I don't like having to scroll around too much
 
 def readSetting(settingDir):
     """
-    Read value of setting file.
+    Read value of setting file. If file is somehow missing,
+    write one with an abitrary value (0.05) for now.
     This is shared between CheckParallel() and ToleranceWindow()
     """
-    settingFile = open(settingDir, "r")
-    tolerance = float(settingFile.read())
+    try:
+        settingFile = open(settingDir, "r")
+        tolerance = float(settingFile.read())
+    except FileNotFoundError:
+        settingFile = open(settingDir, "w+")
+        tolerance = 0.05
+        settingFile.write(str(tolerance))
     settingFile.close()
     return tolerance
 
