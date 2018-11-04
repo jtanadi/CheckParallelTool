@@ -50,7 +50,6 @@ class ToleranceWindow(BaseWindowController):
         because we're tracking tolerance
         """
         toleranceValue = abs(round(self.maxValue - sender.get(), 3))
-        print(toleranceValue)
         self.writeSetting(toleranceValue)
         postEvent("comToleranceSettingChanged")
 
