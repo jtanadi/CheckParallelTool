@@ -14,9 +14,8 @@ class CheckParallel(EditingTool):
         self.glyph = CurrentGlyph()
         self.tolerance = 0.05
 
-        # These are lists so we can track how many of each is selected
-        self.selectedContours = []
-        self.selectedSegments = []
+        # Use a dict so we can keep track of what each selectedSegment belongs to
+        self.selectedContours = {}
 
     def mouseDown(self, point, clickCount):
         pass
@@ -31,61 +30,65 @@ class CheckParallel(EditingTool):
         """
         self.analyzeSelection()
 
-        # If AT LEAST one segment from ONLY one contour has been selected
-        if self.selectedSegments and len(self.selectedContours) == 1:
+        # Only draw if something has been selected
+        if self.selectedContours.values():
             self.drawLines(scale)
-    
+
     def analyzeSelection(self):
         self.selectedContours.clear()
-        self.selectedSegments.clear()
 
-        # Find selected segment...
-        # is this the best way (ie. do I have to iterate?)
-        for contour in self.glyph.contours:
-            for segment in contour:
-                # When segments are selected, add to list and log the parent contour
-                if segment.selected:
-                    if segment.type != "curve":
-                        continue
-                    self.selectedSegments.append(segment)
-                    if segment.contour not in self.selectedContours:
-                        self.selectedContours.append(segment.contour)
-                # Maybe point is selected instead, so iterate to see
-                # if a point is selected, and then find its segment
-                else:
-                    for point in segment.points:
-                        if point.type != "offcurve" or not point.selected:
-                            continue
-                        self.selectedSegments.append(segment)
-                        if segment.contour not in self.selectedContours:
-                            self.selectedContours.append(segment.contour)
+        # Find which segments in each contour are selected
+        for contour in self.glyph:
+            selectedSegments = []
+
+            # Check if any segment has been selected first.
+            # If not, when we check if an oncurve point is selected later,
+            # we won't know if a segment has been selected,
+            # and the point AND the next segment will be selected.
+            if hf.checkIfSegmentHasBeenSelected(contour):
+                selectedSegments = [segment for segment in contour\
+                                    if segment.selected and segment.type == "curve"]
+            else:
+                for segment in contour:
+                    for point in segment:
+                        if point.selected and point.type == "offcurve":
+                            selectedSegments.append(segment)
+                        elif point.selected:
+                            # When an oncurve point is selected,
+                            # append current segment and next segment,
+                            # so user can balance point between 2 segments
+                            segmentIndex = segment.index
+                            selectedSegments.append(segment)
+                            # If it's the last segment (no next index),
+                            # add the first segment
+                            try:
+                                selectedSegments.append(contour[segmentIndex + 1])
+                            except IndexError:
+                                selectedSegments.append(contour[0])
+
+            self.selectedContours[contour.index] = selectedSegments
 
     def drawLines(self, lineThickness):
-        contourPoints = hf.collectAllPointsInContour(self.selectedContours[0])
+        for index in self.selectedContours:
+            contourPoints = hf.collectAllPointsInContour(self.glyph.contours[index])
+            for segment in self.selectedContours[index]:
+                selectedOnCurves = [point for point in segment.points if point.type != "offcurve"]
+                selectedOffCurves = [point for point in segment.points if point.type == "offcurve"]
 
-        for segment in self.selectedSegments:
-            selectedOnCurves = []
-            selectedOffCurves = []
-            for point in segment.points:
-                if point.type == "offcurve":
-                    selectedOffCurves.append(point)
+                pt0 = hf.findPrevOnCurvePt(selectedOnCurves[0], contourPoints).position
+                pt1 = selectedOnCurves[0].position
+                pt2 = selectedOffCurves[0].position
+                pt3 = selectedOffCurves[1].position
+
+                # if lines are parallel, lines are green; otherwise, red
+                if hf.areTheyParallel((pt0, pt1), (pt2, pt3), self.tolerance):
+                    dt.stroke(0, 0, 1, 1)
                 else:
-                    selectedOnCurves.append(point)
+                    dt.stroke(1, 0, 0, 1)
 
-            pt0 = hf.findPrevOnCurvePt(selectedOnCurves[0], contourPoints).position
-            pt1 = selectedOnCurves[0].position
-            pt2 = selectedOffCurves[0].position
-            pt3 = selectedOffCurves[1].position
-
-            # if lines are parallel, lines are green; otherwise, red
-            if hf.areTheyParallel((pt0, pt1), (pt2, pt3), self.tolerance):
-                dt.stroke(0, 1, 0, 1)
-            else:
-                dt.stroke(1, 0, 0, 1)
-
-            dt.strokeWidth(lineThickness)
-            dt.line(pt0, pt1)
-            dt.line(pt2, pt3)
+                dt.strokeWidth(lineThickness)
+                dt.line(pt0, pt1)
+                dt.line(pt2, pt3)
 
     def getToolbarIcon(self):
         return toolbarIcon

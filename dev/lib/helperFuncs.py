@@ -16,6 +16,15 @@ def calcSlope(pt1, pt2):
     except ZeroDivisionError:
         return 0 # Not entirely accurate for vertical lines, but works
 
+def checkIfSegmentHasBeenSelected(contour):
+    """
+    Function takes in contour and return true if
+    any segment has been selected
+    """
+    for segment in contour:
+        if segment.selected:
+            return True
+
 def areTheyParallel(line1, line2, tolerance=0):
     """
     Checks if 2 lines are parallel by comparing their slopes
