@@ -1,8 +1,13 @@
 """
 Helper functions for checkParallel
+They're here because I don't like having to scroll around too much
 """
 
 def calcSlope(pt1, pt2):
+    """
+    Given 2 points, calculate slope using m = y1 - y0 / x1 - x0
+    pt1 and pt2 should be a tuple each (x, y)
+    """
     (xA, yA) = pt1
     (xB, yB) = pt2
 
@@ -11,22 +16,53 @@ def calcSlope(pt1, pt2):
     except ZeroDivisionError:
         return 0 # Not entirely accurate for vertical lines, but works
 
+def areTheyParallel(line1, line2, tolerance=0):
+    """
+    Checks if 2 lines are parallel by comparing their slopes
+    line1 and line2 should be a tuple of tuples each: ((x0, y0), (x1, y1))
+    tolerance defaults to 0
+    """
+    ((x0, y0), (x1, y1)) = line1
+    ((x2, y2), (x3, y3)) = line2
 
-def collectAllPointsInContour(contour):
-    pointsList = []
-    for point in contour.points:
-        pointsList.append(point)
+    m1 = calcSlope((x0, y0), (x1, y1))
+    m2 = calcSlope((x2, y2), (x3, y3))
 
-    return pointsList
+    # instead of checking for absolute equality (m1 == m2),
+    # allow for some tolerance
+    return abs(m1 - m2) <= tolerance
 
-def findPrevOnCurvePt(point, pointsList):
-    onCurves = []
-    # Find all the non offcurves
-    for pt in pointsList:
-        if pt.type != "offcurve":
-            onCurves.append(pt)
-    # Find the matching point from a list of onCurves and
-    # and return the *preceding* point
-    for index, pt in enumerate(onCurves):
+
+def findPrevPt(point, contour, pointType=None):
+    """
+    Find the matching point from a contour and
+    return the PREV point of the specified type.
+    If pointType isn't specified, look for non-offcurves(lines and curves)
+    """
+    if pointType is None:
+        pointsOfType = [pt for pt in contour.points if pt.type != "offcurve"]
+    else:
+        pointsOfType = [pt for pt in contour.points if pt.type == pointType]
+
+    for index, pt in enumerate(pointsOfType):
         if pt == point:
-            return onCurves[index - 1]
+            return pointsOfType[index - 1]
+
+def findNextPt(point, contour, pointType=None):
+    """
+    Find the matching point from a contour and
+    return the NEXT point of the specified type.
+    If pointType isn't specified, look for non-offcurves(lines and curves)
+    """
+    if pointType is None:
+        pointsOfType = [pt for pt in contour.points if pt.type != "offcurve"]
+    else:
+        pointsOfType = [pt for pt in contour.points if pt.type == pointType]
+
+    for index, pt in enumerate(pointsOfType):
+        if pt == point:
+            # If next point doesn't exist (last point), return first point
+            try:
+                return pointsOfType[index + 1]
+            except IndexError:
+                return contour.points[0]
