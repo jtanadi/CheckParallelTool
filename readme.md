@@ -1,7 +1,7 @@
 # Check Parallel Tool
 A simple tool to check & visualize if the line connecting handles and the line connecting on-curve points are parallel.
 
-![animated demo](https://github.com/jtanadi/CheckParallelTool/blob/master/z-misc/demo1_181104.gif "animated demo")
+![animated demo](https://github.com/jtanadi/CheckParallelTool/blob/master/z-misc/demo.gif "animated demo")
 
 Double-click on the canvas to set tool accuracy. This tool reads and writes a text file for data persistence.
 ![menu demo](https://github.com/jtanadi/CheckParallelTool/blob/master/z-misc/demo2_181104.gif "menu demo")
