@@ -38,30 +38,36 @@ class CheckParallel(EditingTool):
         """
         Look at what's selected and add appropriate segment(s) to
         the self.selectedContours dict.
-        First, check if any segment has been selected without actually logging.
-        (If we don't do this, when we select a segment, the next one will be too,
-        because we're selecting 2 adjacent segments when we select an oncurve pt,
-        and a segment contains an oncurve point.
         We don't explicitly check if a segment is a curve because we don't draw
         segments without offcurves in drawLines() anyway.
         """
-
         self.selectedContours.clear()
 
         # Find which segments in each contour are selected
         for contour in self.glyph:
-            selectedSegments = []
+            # Collect all selected segments
+            selectedSegments = [segment for segment in contour if segment.selected]
 
-            if hf.checkIfSegmentHasBeenSelected(contour):
-                selectedSegments = [segment for segment in contour if segment.selected]
-            else:
+            # If no segments are selected, look at points
+            if not selectedSegments:
+                selectedSegments = []
                 for segment in contour:
                     for point in segment:
+                        # Treat offcurve selection normally (only add current segment)
                         if point.selected and point.type == "offcurve":
                             selectedSegments.append(segment)
+
+                        # If an oncurve is selected, add current and next segments
+                        # so user can balance pt between 2 segments
                         elif point.selected:
-                            # When oncurve point is selected, append current and next segments
-                            # so user can balance point between 2 segments
+                            # If any point adjacent to current point is selected, then
+                            # a segment has been selected, and it's been taken care of above
+                            # This prevents 2 segments from being selected when user
+                            # selects a segment.
+                            if hf.findPrevPt(point, contour).selected\
+                            or hf.findNextPt(point, contour).selected:
+                                continue
+
                             # If it's the last segment (no next index), add first segment
                             try:
                                 selectedSegments.append(contour[segment.index + 1])
@@ -73,17 +79,17 @@ class CheckParallel(EditingTool):
             self.selectedContours[contour.index] = selectedSegments
 
     def drawLines(self, lineThickness):
-        for index in self.selectedContours:
-            contourPoints = hf.collectAllPointsInContour(self.glyph.contours[index])
-            for segment in self.selectedContours[index]:
+        for index, selectedSegments in self.selectedContours.items():
+            currentContour = self.glyph[index]
+            for segment in selectedSegments:
                 selectedOnCurves = [point for point in segment.points if point.type != "offcurve"]
                 selectedOffCurves = [point for point in segment.points if point.type == "offcurve"]
 
-                # If no offcurves, it's a straight line, so ignore
+                # If no selectedOffCurves, it's a straight line, so ignore
                 if not selectedOffCurves:
                     continue
 
-                pt0 = hf.findPrevOnCurvePt(selectedOnCurves[0], contourPoints).position
+                pt0 = hf.findPrevPt(selectedOnCurves[0], currentContour).position
                 pt1 = selectedOnCurves[0].position
                 pt2 = selectedOffCurves[0].position
                 pt3 = selectedOffCurves[1].position
