@@ -10,13 +10,12 @@ to notify it to read the setting whenever it changes.
 import helperFuncs as hf
 from vanilla import FloatingWindow, Slider, Button, TextBox
 from mojo.events import postEvent
-from defconAppKit.windows.baseWindow import BaseWindowController
 import os.path
 
 currentDir = os.path.dirname(__file__)
 settingDir = os.path.join(currentDir, "..", "resources", "toleranceSetting.txt")
 
-class ToleranceWindow(BaseWindowController):
+class ToleranceWindow:
     def __init__(self):
         """
         Use "accuracy" in UI because it's easier to understand,
@@ -38,7 +37,8 @@ class ToleranceWindow(BaseWindowController):
                                   text="More",
                                   alignment="right",
                                   sizeStyle="small")
-        self.setUpBaseWindowBehavior()
+
+        self.w.bind("close", self.windowCloseCallback)
         # Post this event so CheckParallel() can't open 2 ToleranceWindow()
         postEvent("comToleranceWindowOpened")
         self.w.open()
@@ -69,7 +69,6 @@ class ToleranceWindow(BaseWindowController):
         so CP() will let user open a TW() again.
         """
         postEvent("comToleranceWindowClosed")
-        super(ToleranceWindow, self).windowCloseCallback(sender)
 
 if __name__ == "__main__":
     ToleranceWindow()

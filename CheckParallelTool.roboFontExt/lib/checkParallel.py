@@ -23,7 +23,7 @@ settingDir = os.path.join(currentDir, "..", "resources", "toleranceSetting.txt")
 iconFileDir = os.path.join(currentDir, "..", "resources", "checkParallelIcon.pdf")
 toolbarIcon = NSImage.alloc().initWithContentsOfFile_(iconFileDir)
 
-class CheckParallel(EditingTool):
+class CheckParallelTool(EditingTool):
     def setup(self):
         """
         Watch for events posted by ToleranceWindow():
