@@ -10,7 +10,6 @@ to notify it to read the setting whenever it changes.
 import helperFuncs as hf
 from vanilla import FloatingWindow, Slider, Button, TextBox
 from mojo.events import postEvent
-from defconAppKit.windows.baseWindow import BaseWindowController
 import os.path
 
 currentDir = os.path.dirname(__file__)
