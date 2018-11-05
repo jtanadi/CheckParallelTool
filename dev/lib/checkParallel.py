@@ -157,4 +157,4 @@ class CheckParallelTool(EditingTool):
                 dt.line(pt0, pt1)
                 dt.line(pt2, pt3)
 
-installTool(CheckParallel())
+installTool(CheckParallelTool())
