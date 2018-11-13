@@ -51,7 +51,7 @@ class ToleranceWindow:
         Reverse slider value by subtracting from maxValue
         because we're tracking tolerance
         """
-        toleranceValue = self.maxValue - sender.get()
+        toleranceValue = round(self.maxValue - sender.get(), 2)
         self.writeSetting(toleranceValue)
         postEvent("comToleranceSettingChanged")
 
