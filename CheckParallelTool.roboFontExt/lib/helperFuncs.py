@@ -3,6 +3,8 @@ Helper functions for CheckParallel and ToleranceWindow
 They're here because I don't like having to scroll around too much
 """
 
+import math
+
 def readSetting(settingDir):
     """
     Read value of setting file. If file is somehow missing,
@@ -14,7 +16,7 @@ def readSetting(settingDir):
             tolerance = float(settingFile.read())
     except FileNotFoundError:
         with open(settingDir, "w+") as settingFile:
-            tolerance = 0.025
+            tolerance = 2.5
             settingFile.write(str(tolerance))
     return tolerance
 
@@ -40,12 +42,13 @@ def areTheyParallel(line1, line2, tolerance=0):
     ((x0, y0), (x1, y1)) = line1
     ((x2, y2), (x3, y3)) = line2
 
-    m1 = calcSlope((x0, y0), (x1, y1))
-    m2 = calcSlope((x2, y2), (x3, y3))
+    # atan returns rads, so convert to angle
+    angle1 = abs(math.atan2((y1 - y0), (x1 - x0)) * 180 / math.pi)
+    angle2 = abs(math.atan2((y3 - y2), (x3 - x2)) * 180 / math.pi)
 
-    # instead of checking for absolute equality (m1 == m2),
+    # instead of checking for absolute equality,
     # allow for some tolerance
-    return abs(m1 - m2) <= tolerance
+    return abs(angle1 - angle2) <= tolerance
 
 
 def findPrevPt(point, contour, pointType=None):

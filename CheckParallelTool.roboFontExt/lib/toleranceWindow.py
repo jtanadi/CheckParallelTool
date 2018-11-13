@@ -22,7 +22,7 @@ class ToleranceWindow:
         but convert to "tolerance" because it's easier to use
         in parallel slope math later.
         """
-        self.maxValue = 0.05
+        self.maxValue = 5
         self.w = FloatingWindow((150, 60), "Set Accuracy")
         self.w.accuracySlider = Slider((10, 9, -10, 23),
                                         minValue=0,
@@ -51,7 +51,7 @@ class ToleranceWindow:
         Reverse slider value by subtracting from maxValue
         because we're tracking tolerance
         """
-        toleranceValue = abs(round(self.maxValue - sender.get(), 3))
+        toleranceValue = self.maxValue - sender.get()
         self.writeSetting(toleranceValue)
         postEvent("comToleranceSettingChanged")
 

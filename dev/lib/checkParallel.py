@@ -149,7 +149,7 @@ class CheckParallelTool(EditingTool):
 
                 # if lines are parallel, lines are green; otherwise, red
                 if hf.areTheyParallel((pt0, pt1), (pt2, pt3), self.tolerance):
-                    dt.stroke(0, 1, 0, 1)
+                    dt.stroke(0, 0, 1, 1)
                 else:
                     dt.stroke(1, 0, 0, 1)
 
