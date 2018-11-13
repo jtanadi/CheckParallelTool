@@ -10,13 +10,12 @@ def readSetting(settingDir):
     This is shared between CheckParallel() and ToleranceWindow()
     """
     try:
-        settingFile = open(settingDir, "r")
-        tolerance = float(settingFile.read())
+        with open(settingDir, "r") as settingFile:
+            tolerance = float(settingFile.read())
     except FileNotFoundError:
-        settingFile = open(settingDir, "w+")
-        tolerance = 0.025
-        settingFile.write(str(tolerance))
-    settingFile.close()
+        with open(settingDir, "w+") as settingFile:
+            tolerance = 0.025
+            settingFile.write(str(tolerance))
     return tolerance
 
 def calcSlope(pt1, pt2):

@@ -43,6 +43,7 @@ class ToleranceWindow:
         postEvent("comToleranceWindowOpened")
         self.w.open()
         self.w.center()
+        self.w.makeKey()
 
     def accuracySliderCB(self, sender):
         """
@@ -59,9 +60,8 @@ class ToleranceWindow:
         Write setting to file or make new file if
         setting file doesn't exist.
         """
-        settingFile = open(settingDir, "w+")
-        settingFile.write(str(value))
-        settingFile.close()
+        with open(settingDir, "w+") as settingFile:
+            settingFile.write(str(value))
 
     def windowCloseCallback(self, sender):
         """
