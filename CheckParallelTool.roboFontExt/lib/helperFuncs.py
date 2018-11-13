@@ -20,19 +20,6 @@ def readSetting(settingDir):
             settingFile.write(str(tolerance))
     return tolerance
 
-def calcSlope(pt1, pt2):
-    """
-    Given 2 points, calculate slope using m = y1 - y0 / x1 - x0
-    pt1 and pt2 should be a tuple each (x, y)
-    """
-    (xA, yA) = pt1
-    (xB, yB) = pt2
-
-    try:
-        return (yB - yA) / (xB - xA)
-    except ZeroDivisionError:
-        return 0 # Not entirely accurate for vertical lines, but works
-
 def areTheyParallel(line1, line2, tolerance=0):
     """
     Checks if 2 lines are parallel by comparing their slopes
@@ -49,7 +36,6 @@ def areTheyParallel(line1, line2, tolerance=0):
     # instead of checking for absolute equality,
     # allow for some tolerance
     return abs(angle1 - angle2) <= tolerance
-
 
 def findPrevPt(point, contour, pointType=None):
     """
