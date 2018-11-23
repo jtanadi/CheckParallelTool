@@ -10,13 +10,15 @@ When active, this tool adds an observer to keep an eye on
 the tolerance setting posted by ToleranceWindow.
 """
 
-import helperFuncs as hf
-from toleranceWindow import ToleranceWindow
+import os.path
+from AppKit import NSImage
+
 import mojo.drawingTools as dt
 from mojo.events import EditingTool, installTool, addObserver, removeObserver
 from mojo.UI import UpdateCurrentGlyphView
-from AppKit import NSImage
-import os.path
+
+import utils.helperFuncs as hf
+from toleranceWindow import ToleranceWindow
 
 currentDir = os.path.dirname(__file__)
 settingDir = os.path.join(currentDir, "..", "resources", "toleranceSetting.txt")
@@ -33,6 +35,9 @@ class CheckParallelTool(EditingTool):
         """
         self.glyph = CurrentGlyph()
         self.tolerance = hf.readSetting(settingDir)
+
+        self.mouseDownPoint = None
+        self.scaleForScale = 1
 
         # Set a switch to prevent user from opening 2 ToleranceWindow()
         self.canOpenSetting = True
@@ -62,31 +67,12 @@ class CheckParallelTool(EditingTool):
         """
         self.canOpenSetting = not self.canOpenSetting
 
-    def mouseDown(self, point, clickCount):
-        """
-        Double-click to open ToleranceWindow() if it hasn't been opened
-        """
-        if clickCount == 2 and self.canOpenSetting:
-            ToleranceWindow()
 
     def applyTolerance(self, info):
         """
         Redefine tolerance whenever comToleranceSettingChanged is triggered
         """
         self.tolerance = hf.readSetting(settingDir)
-
-
-    def draw(self, scale):
-        """
-        Only using this like a middleperson so I can name the process
-        (ie. with functions)
-        scale is given by RF (part of BaseEventTool.draw())
-        """
-        self.analyzeSelection()
-
-        # Only draw if something has been selected
-        if self.selectedContours.values():
-            self.drawLines(scale)
 
     def analyzeSelection(self):
         """
@@ -129,9 +115,14 @@ class CheckParallelTool(EditingTool):
 
                         selectedSegments.append(segment)
 
-            self.selectedContours[contour.index] = selectedSegments
+            if selectedSegments:
+                self.selectedContours[contour.index] = selectedSegments
 
-    def drawLines(self, lineThickness):
+    def getSelectedPointsPos(self):
+        """
+        Get positions of selected points
+        """
+        self.selectedPointPosList = []
         for index, selectedSegments in self.selectedContours.items():
             currentContour = self.glyph[index]
             for segment in selectedSegments:
@@ -147,14 +138,153 @@ class CheckParallelTool(EditingTool):
                 pt2 = selectedOffCurves[0].position
                 pt3 = selectedOffCurves[1].position
 
-                # if lines are parallel, lines are green; otherwise, red
-                if hf.areTheyParallel((pt0, pt1), (pt2, pt3), self.tolerance):
-                    dt.stroke(0, 1, 0, 1)
-                else:
-                    dt.stroke(1, 0, 0, 1)
+                self.selectedPointPosList.append((pt0, pt1, pt2, pt3))
 
-                dt.strokeWidth(lineThickness)
-                dt.line(pt0, pt1)
-                dt.line(pt2, pt3)
+    def keepSegmentSelected(self):
+        """
+        Keep segment selected when click point is w/in
+        line connecting bcps
+        """
+        if not self.selectedPointPosList:
+            return
+
+        for cluster in self.selectedPointPosList:
+            # First 2 items are oncurve positions
+            pt2, pt3 = cluster[2], cluster[3]
+
+            if not hf.isPointInLine(self.mouseDownPoint, (pt2, pt3)):
+                continue
+
+            self.scaleForScale = 4
+            for selectedSegments in self.selectedContours.values():
+                for segment in selectedSegments:
+                    segment.selected = True
+
+    def mouseDown(self, point, clickCount):
+        """
+        Double-click to open ToleranceWindow() if it hasn't been opened
+        """
+        if clickCount == 2 and self.canOpenSetting:
+            ToleranceWindow()
+        self.scaleForScale = 1
+        # self.analyzeSelection()
+        self.getSelectedPointsPos()
+        self.mouseDownPoint = point
+
+        for index, selectedSegments in self.selectedContours.items():
+            currentContour = self.glyph[index]
+            for segment in selectedSegments:
+                selectedOnCurves = [point for point in segment.points if point.type != "offcurve"]
+                selectedOffCurves = [point for point in segment.points if point.type == "offcurve"]
+
+                # If no selectedOffCurves, it's a straight line, so ignore
+                if not selectedOffCurves:
+                    continue
+
+                self.pt0 = hf.findPrevPt(selectedOnCurves[0], currentContour).position
+                self.pt1 = selectedOnCurves[0].position
+                self.pt2 = selectedOffCurves[0].position
+                self.pt3 = selectedOffCurves[1].position
+
+                self.slope0, self.intercept0 = hf.getSlopeAndIntercept(self.pt0, self.pt2)
+                self.slope1, self.intercept1 = hf.getSlopeAndIntercept(self.pt1, self.pt3)
+
+                # print("slope0", self.slope0)
+                # print("slope1", self.slope1)
+
+        self.keepSegmentSelected()
+
+    def mouseUp(self, point):
+        self.keepSegmentSelected()
+        self.mouseDownPoint = None
+        # self.glyph.performUndo()
+
+    def mouseDragged(self, point, delta):
+        self.glyph.prepareUndo("Move handles")
+
+        for index, selectedSegments in self.selectedContours.items():
+            currentContour = self.glyph[index]
+            for segment in selectedSegments:
+                selectedOffCurves = [point for point in segment.points if point.type == "offcurve"]
+
+                # If no selectedOffCurves, it's a straight line, so ignore
+                if not selectedOffCurves:
+                    continue
+
+                # if not hf.isPointInLine(self.mouseDownPoint, (pt2, pt3)):
+                #     continue
+
+                # print(pt0, pt2, slope0)
+                # print(pt1, pt3, slope1)
+
+                # Differences b/w mousedown point and bcp points
+                pt2DiffX = self.mouseDownPoint.x - self.pt2[0]
+                pt2DiffY = self.mouseDownPoint.y - self.pt2[1]
+                pt3DiffX = self.mouseDownPoint.x - self.pt3[0]
+                pt3DiffY = self.mouseDownPoint.y - self.pt3[1]
+
+                pt2XtoUse = point.x - pt2DiffX
+                pt2YtoUse = point.y - pt2DiffY
+                pt3XtoUse = point.x - pt3DiffX
+                pt3YtoUse = point.y - pt3DiffY
+
+                # Horizontal line
+                if self.slope0 == 0:
+                    pt2YtoUse = self.pt2[1]
+                
+                # Vertical line
+                elif self.slope0 is None:
+                    pt2XtoUse = self.pt2[0]
+                
+                # Slope between horizontal and 45deg
+                elif 0 < self.slope0 <= 1:
+                    pt2YtoUse = self.slope0 * self.pt2[0] + self.intercept0
+                    print('hey')
+
+                elif self.slope0 > 1:
+                    pt2XtoUse = (self.pt2[1] - self.intercept0) / self.slope0
+
+
+                if self.slope1 == 0:
+                    pt3YtoUse = self.pt3[1]
+                elif self.slope1 is None:
+                    pt3YtoUse = self.pt3[0]
+                elif 0 < self.slope1 <= 1:
+                    pt3YtoUse = self.slope1 * self.pt3[0] + self.intercept1
+                elif self.slope1 > 1:
+                    pt3XtoUse = (self.pt3[1] - self.intercept1) / self.slope1
+
+                selectedOffCurves[0].position = (round(pt2XtoUse), round(pt2YtoUse))
+                selectedOffCurves[1].position = (round(pt3XtoUse), round(pt3YtoUse))
+
+        self.glyph.changed()
+        self.keepSegmentSelected()
+
+    def draw(self, scale):
+        """
+        Draw lines
+        """
+        self.analyzeSelection()
+        self.getSelectedPointsPos()
+
+        # Only draw if something has been selected
+        if not self.selectedContours.values():
+            return
+
+        for cluster in self.selectedPointPosList:
+            pt0, pt1, pt2, pt3 = cluster[0], cluster[1], cluster[2], cluster[3]
+            # Parallel-ish lines are green; otherwise, red
+            if hf.areTheyParallel((pt0, pt1), (pt2, pt3), self.tolerance):
+                dt.stroke(0, 0, 1, 1)
+            else:
+                dt.stroke(1, 0, 0, 1)
+
+            dt.strokeWidth(scale)
+            dt.line(pt0, pt1)
+
+            dt.strokeWidth(scale * self.scaleForScale)
+            dt.line(pt2, pt3)
+
+
 
 installTool(CheckParallelTool())

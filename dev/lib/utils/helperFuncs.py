@@ -2,7 +2,6 @@
 Helper functions for CheckParallel and ToleranceWindow
 They're here because I don't like having to scroll around too much
 """
-
 import math
 
 def readSetting(settingDir):
@@ -19,6 +18,52 @@ def readSetting(settingDir):
             tolerance = 2.5
             settingFile.write(str(tolerance))
     return tolerance
+
+def getSlopeAndIntercept(pt1, pt2):
+    x0, y0 = pt1
+    x1, y1 = pt2
+
+    print("from slope", x0, x1)
+
+    try:
+        slope = (y1 - y0) / (x1 - x0)
+    except ZeroDivisionError:
+        slope = None
+
+    # y = mx + b
+    if slope is not None:
+        intercept = y0 - (slope * x0)
+    else:
+        intercept = 0
+
+    return slope, intercept
+
+def isPointInLine(clickPt, line):
+    """
+    Check if click point is w/in line
+    drawn between bcps (+ tolerance)
+    """
+    if clickPt is None or line is None:
+        return
+
+    tolerance = 2
+    xClick, yClick = clickPt
+    pt1, pt2 = line
+    slope, intercept = getSlopeAndIntercept(pt1, pt2)
+
+    # Vertical line, so just check if clickPt is within tolerance
+    # of line's x value and between pt1 y and pt2 y
+    if slope is None:
+        return abs(xClick - pt1[0]) <= tolerance\
+            and ((pt1[1] > yClick > pt2[1])\
+            or (pt1[1] < yClick < pt2[1]))
+
+    calculatedY = (slope * xClick) + intercept
+
+    return abs(yClick - calculatedY) <= tolerance\
+        and ((pt1[0] > xClick > pt2[0])\
+        or (pt1[0] < xClick < pt2[0]))
+
 
 def areTheyParallel(line1, line2, tolerance=0):
     """
@@ -65,6 +110,8 @@ def findNextPt(point, contour, pointType=None):
 
     for index, pt in enumerate(pointsOfType):
         if pt == point:
+            # return None
+
             # If next point doesn't exist (last point), return first point
             try:
                 return pointsOfType[index + 1]
