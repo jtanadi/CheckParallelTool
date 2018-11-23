@@ -248,7 +248,7 @@ class CheckParallelTool(EditingTool):
                 if self.slope1 == 0:
                     pt3YtoUse = self.pt3[1]
                 elif self.slope1 is None:
-                    pt3YtoUse = self.pt3[0]
+                    pt3XtoUse = self.pt3[0]
                 elif 0 < self.slope1 <= 1:
                     pt3YtoUse = self.slope1 * self.pt3[0] + self.intercept1
                 elif self.slope1 > 1:
