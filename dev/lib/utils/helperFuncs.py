@@ -23,8 +23,6 @@ def getSlopeAndIntercept(pt1, pt2):
     x0, y0 = pt1
     x1, y1 = pt2
 
-    print("from slope", x0, x1)
-
     try:
         slope = (y1 - y0) / (x1 - x0)
     except ZeroDivisionError:
@@ -46,7 +44,7 @@ def isPointInLine(clickPt, line):
     if clickPt is None or line is None:
         return
 
-    tolerance = 2
+    tolerance = 4
     xClick, yClick = clickPt
     pt1, pt2 = line
     slope, intercept = getSlopeAndIntercept(pt1, pt2)
@@ -63,7 +61,6 @@ def isPointInLine(clickPt, line):
     return abs(yClick - calculatedY) <= tolerance\
         and ((pt1[0] > xClick > pt2[0])\
         or (pt1[0] < xClick < pt2[0]))
-
 
 def areTheyParallel(line1, line2, tolerance=0):
     """
@@ -117,3 +114,11 @@ def findNextPt(point, contour, pointType=None):
                 return pointsOfType[index + 1]
             except IndexError:
                 return contour.points[0]
+
+def writeSetting(settingDir, value):
+    """
+    Write setting to file or make new file if
+    setting file doesn't exist.
+    """
+    with open(settingDir, "w+") as settingFile:
+        settingFile.write(str(value))

@@ -7,7 +7,7 @@ The CheckParallel tool has an observer
 to notify it to read the setting whenever it changes.
 """
 
-import helperFuncs as hf
+import utils.helperFuncs as hf
 from vanilla import FloatingWindow, Slider, Button, TextBox
 from mojo.events import postEvent
 import os.path
@@ -25,11 +25,11 @@ class ToleranceWindow:
         self.maxValue = 5
         self.w = FloatingWindow((150, 60), "Set Accuracy")
         self.w.accuracySlider = Slider((10, 9, -10, 23),
-                                        minValue=0,
-                                        maxValue=self.maxValue,
-                                        value=self.maxValue - hf.readSetting(settingDir),
-                                        sizeStyle="small",
-                                        callback=self.accuracySliderCB)
+                                       minValue=0,
+                                       maxValue=self.maxValue,
+                                       value=self.maxValue - hf.readSetting(settingDir),
+                                       sizeStyle="small",
+                                       callback=self.accuracySliderCB)
         self.w.lessText = TextBox((10, 30, -10, 12),
                                   text="Less",
                                   sizeStyle="small")
@@ -40,7 +40,7 @@ class ToleranceWindow:
 
         self.w.bind("close", self.windowCloseCallback)
         # Post this event so CheckParallel() can't open 2 ToleranceWindow()
-        postEvent("comToleranceWindowOpened")
+        postEvent("com.ToleranceWindowOpened")
         self.w.open()
         self.w.center()
         self.w.makeKey()
@@ -52,23 +52,15 @@ class ToleranceWindow:
         because we're tracking tolerance
         """
         toleranceValue = round(self.maxValue - sender.get(), 2)
-        self.writeSetting(toleranceValue)
-        postEvent("comToleranceSettingChanged")
-
-    def writeSetting(self, value):
-        """
-        Write setting to file or make new file if
-        setting file doesn't exist.
-        """
-        with open(settingDir, "w+") as settingFile:
-            settingFile.write(str(value))
+        hf.writeSetting(settingDir, toleranceValue)
+        postEvent("com.ToleranceSettingChanged")
 
     def windowCloseCallback(self, sender):
         """
         Let CheckParallel() know that ToleranceWindow() has been closed,
         so CP() will let user open a TW() again.
         """
-        postEvent("comToleranceWindowClosed")
+        postEvent("com.ToleranceWindowClosed")
 
 if __name__ == "__main__":
     ToleranceWindow()
