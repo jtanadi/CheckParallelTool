@@ -189,9 +189,6 @@ class CheckParallelTool(EditingTool):
                 self.slope0, self.intercept0 = hf.getSlopeAndIntercept(self.pt0, self.pt2)
                 self.slope1, self.intercept1 = hf.getSlopeAndIntercept(self.pt1, self.pt3)
 
-                # print("slope0", self.slope0)
-                # print("slope1", self.slope1)
-
         self.keepSegmentSelected()
 
     def mouseUp(self, point):
@@ -203,19 +200,11 @@ class CheckParallelTool(EditingTool):
         self.glyph.prepareUndo("Move handles")
 
         for index, selectedSegments in self.selectedContours.items():
-            currentContour = self.glyph[index]
             for segment in selectedSegments:
                 selectedOffCurves = [point for point in segment.points if point.type == "offcurve"]
-
                 # If no selectedOffCurves, it's a straight line, so ignore
                 if not selectedOffCurves:
                     continue
-
-                # if not hf.isPointInLine(self.mouseDownPoint, (pt2, pt3)):
-                #     continue
-
-                # print(pt0, pt2, slope0)
-                # print(pt1, pt3, slope1)
 
                 # Differences b/w mousedown point and bcp points
                 pt2DiffX = self.mouseDownPoint.x - self.pt2[0]
@@ -231,19 +220,15 @@ class CheckParallelTool(EditingTool):
                 # Horizontal line
                 if self.slope0 == 0:
                     pt2YtoUse = self.pt2[1]
-                
                 # Vertical line
                 elif self.slope0 is None:
                     pt2XtoUse = self.pt2[0]
-                
                 # Slope between horizontal and 45deg
                 elif 0 < self.slope0 <= 1:
                     pt2YtoUse = self.slope0 * self.pt2[0] + self.intercept0
                     print('hey')
-
-                elif self.slope0 > 1:
+                else:
                     pt2XtoUse = (self.pt2[1] - self.intercept0) / self.slope0
-
 
                 if self.slope1 == 0:
                     pt3YtoUse = self.pt3[1]
@@ -251,7 +236,7 @@ class CheckParallelTool(EditingTool):
                     pt3XtoUse = self.pt3[0]
                 elif 0 < self.slope1 <= 1:
                     pt3YtoUse = self.slope1 * self.pt3[0] + self.intercept1
-                elif self.slope1 > 1:
+                else:
                     pt3XtoUse = (self.pt3[1] - self.intercept1) / self.slope1
 
                 selectedOffCurves[0].position = (round(pt2XtoUse), round(pt2YtoUse))
