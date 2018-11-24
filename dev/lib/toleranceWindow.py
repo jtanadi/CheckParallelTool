@@ -8,6 +8,7 @@ to notify it to read the setting whenever it changes.
 """
 
 import utils.helperFuncs as hf
+from mojo.UI import ShowHideWindow
 from vanilla import FloatingWindow, Slider, Button, TextBox
 from mojo.events import postEvent
 import os.path
@@ -23,7 +24,7 @@ class ToleranceWindow:
         in parallel slope math later.
         """
         self.maxValue = 5
-        self.w = FloatingWindow((150, 60), "Set Accuracy")
+        self.w = ShowHideWindow((150, 60), "Set Accuracy")
         self.w.accuracySlider = Slider((10, 9, -10, 23),
                                        minValue=0,
                                        maxValue=self.maxValue,
@@ -41,7 +42,7 @@ class ToleranceWindow:
         self.w.bind("close", self.windowCloseCallback)
         # Post this event so CheckParallel() can't open 2 ToleranceWindow()
         postEvent("com.ToleranceWindowOpened")
-        self.w.open()
+        # self.w.open()
         self.w.center()
         self.w.makeKey()
 
@@ -60,7 +61,9 @@ class ToleranceWindow:
         Let CheckParallel() know that ToleranceWindow() has been closed,
         so CP() will let user open a TW() again.
         """
+        self.w.close()
         postEvent("com.ToleranceWindowClosed")
 
 if __name__ == "__main__":
-    ToleranceWindow()
+    toleranceWindow = ToleranceWindow()
+    toleranceWindow.w.open()

@@ -34,20 +34,16 @@ class CheckParallelTool(EditingTool):
         """
         self.glyph = CurrentGlyph()
         self.tolerance = hf.readSetting(settingDir)
+        self.toleranceWindow = ToleranceWindow()
 
         self.mouseDownPoint = None
         self.canMarquee = True
         self.lineWeightMultiplier = 1
 
-        # Set a switch to prevent user from opening 2 ToleranceWindow()
-        self.canOpenSetting = True
-
         # Use a dict so we can keep track of what each selectedSegment belongs to
         self.selectedContours = {}
 
-        addObserver(self, "_applyTolerance", "comToleranceSettingChanged")
-        addObserver(self, "_toggleOpenSwitch", "comToleranceWindowOpened")
-        addObserver(self, "_toggleOpenSwitch", "comToleranceWindowClosed")
+        addObserver(self, "_applyTolerance", "com.ToleranceSettingChanged")
 
     def getToolbarIcon(self):
         return toolbarIcon
@@ -56,131 +52,18 @@ class CheckParallelTool(EditingTool):
         return "Check Parallel Tool"
 
     def becomeInactive(self):
-        removeObserver(self, "comToleranceSettingChanged")
-        removeObserver(self, "comToleranceWindowOpened")
-        removeObserver(self, "comToleranceWindowClosed")
-
-    def _toggleOpenSwitch(self, info):
-        """
-        A switch that's run everytime the tool is notified
-        when the ToleranceWindow() is opened or closed
-        """
-        self.canOpenSetting = not self.canOpenSetting
-
-    def _applyTolerance(self, info):
-        """
-        Redefine tolerance whenever comToleranceSettingChanged is triggered
-        """
-        self.tolerance = hf.readSetting(settingDir)
-
-    def _analyzeSelection(self):
-        """
-        Look at what's selected and add appropriate segment(s) to
-        the self.selectedContours dict.
-        We don't explicitly check if a segment is a curve because we don't draw
-        segments without offcurves in drawLines() anyway.
-        """
-        self.selectedContours.clear()
-
-        # Find which segments in each contour are selected
-        for contour in self.glyph:
-            selectedSegments = []
-
-            for segment in contour:
-                if segment.selected:
-                    selectedSegments.append(segment)
-
-                for point in segment:
-                    # Treat offcurve selection normally (only add current segment)
-                    if point.selected and point.type == "offcurve":
-                        selectedSegments.append(segment)
-
-                    # If an oncurve is selected, add current and next segments
-                    # so user can balance pt between 2 segments
-                    elif point.selected:
-                        # If any point adjacent to current point is selected, then
-                        # a segment has been selected, and it's been taken care of above
-                        # This prevents 2 segments from being selected when user
-                        # selects a segment.
-                        if hf.findPrevPt(point, contour).selected\
-                        or hf.findNextPt(point, contour).selected:
-                            continue
-
-                        # If it's the last segment (no next index), add first segment
-                        try:
-                            selectedSegments.append(contour[segment.index + 1])
-                        except IndexError:
-                            selectedSegments.append(contour[0])
-
-                        selectedSegments.append(segment)
-
-            if selectedSegments:
-                self.selectedContours[contour.index] = selectedSegments
-
-    def _getPointsFromSelectedContours(self):
-        """
-        Return all selected points (oncurves & bcps)
-        as a list of tuples of tuples
-        [
-            ((x0, y0), (x1, y1), (x2, y2), (x3, y3)),
-            ((x4, y4), (x5, y5), (x6, y6), (x7, y7)),
-            ...
-        ]
-
-        **Actual points are returned, not positions**
-        """
-        selectedPoints = []
-        for index, selectedSegments in self.selectedContours.items():
-            currentContour = self.glyph[index]
-            for segment in selectedSegments:
-                selectedOnCurves = [point for point in segment.points if point.type != "offcurve"]
-                selectedOffCurves = [point for point in segment.points if point.type == "offcurve"]
-
-                # If no selectedOffCurves, it's a straight line, so ignore
-                if not selectedOffCurves:
-                    continue
-
-                pt0 = hf.findPrevPt(selectedOnCurves[0], currentContour)
-                pt1 = selectedOnCurves[0]
-                pt2 = selectedOffCurves[0]
-                pt3 = selectedOffCurves[1]
-
-                selectedPoints.append((pt0, pt1, pt2, pt3))
-        return selectedPoints
-
-    def _keepSegmentSelected(self):
-        """
-        Keep segment selected when click point is w/in
-        line connecting bcps
-
-        For now, only do this when 1 segment is selected
-        """
-        if not self.ptsFromSelectedCtrs:
-            return
-        elif len(self.ptsFromSelectedCtrs) != 1:
-            return
-
-        for cluster in self.ptsFromSelectedCtrs:
-            # First 2 items are oncurve positions
-            pt2Pos, pt3Pos = cluster[2].position, cluster[3].position
-
-            if not hf.isPointInLine(self.mouseDownPoint, (pt2Pos, pt3Pos)):
-                continue
-
-            self.canMarquee = False
-            self.lineWeightMultiplier = 4
-
-            for selectedSegments in self.selectedContours.values():
-                for segment in selectedSegments:
-                    segment.selected = True
+        removeObserver(self, "com.ToleranceSettingChanged")
 
     def mouseDown(self, point, clickCount):
         """
-        Mouse down stuff
+        Mouse down stuff.
+        On double click, open toleranceWindow
+
+        Otherwise, record mouse position,
+        oncurve & bcp positions, and do some math.
         """
-        # Double-click for ToleranceWindow()
-        if clickCount == 2 and self.canOpenSetting:
-            ToleranceWindow()
+        if clickCount == 2:
+            self.toleranceWindow.w.open()
 
         self.ptsFromSelectedCtrs = self._getPointsFromSelectedContours()
         if len(self.ptsFromSelectedCtrs) != 1:
@@ -307,5 +190,113 @@ class CheckParallelTool(EditingTool):
 
             dt.strokeWidth(scale * self.lineWeightMultiplier)
             dt.line(pt2, pt3)
+
+    def _applyTolerance(self, info):
+        """
+        Redefine tolerance whenever comToleranceSettingChanged is triggered
+        """
+        self.tolerance = hf.readSetting(settingDir)
+
+    def _analyzeSelection(self):
+        """
+        Look at what's selected and add appropriate segment(s) to
+        the self.selectedContours dict.
+        We don't explicitly check if a segment is a curve because we don't draw
+        segments without offcurves in drawLines() anyway.
+        """
+        self.selectedContours.clear()
+
+        # Find which segments in each contour are selected
+        for contour in self.glyph:
+            selectedSegments = []
+
+            for segment in contour:
+                if segment.selected:
+                    selectedSegments.append(segment)
+
+                for point in segment:
+                    # Treat offcurve selection normally (only add current segment)
+                    if point.selected and point.type == "offcurve":
+                        selectedSegments.append(segment)
+
+                    # If an oncurve is selected, add current and next segments
+                    # so user can balance pt between 2 segments
+                    elif point.selected:
+                        # If any point adjacent to current point is selected, then
+                        # a segment has been selected, and it's been taken care of above
+                        # This prevents 2 segments from being selected when user
+                        # selects a segment.
+                        if hf.findPrevPt(point, contour).selected\
+                        or hf.findNextPt(point, contour).selected:
+                            continue
+
+                        # If it's the last segment (no next index), add first segment
+                        try:
+                            selectedSegments.append(contour[segment.index + 1])
+                        except IndexError:
+                            selectedSegments.append(contour[0])
+
+                        selectedSegments.append(segment)
+
+            if selectedSegments:
+                self.selectedContours[contour.index] = selectedSegments
+
+    def _getPointsFromSelectedContours(self):
+        """
+        Return all selected points (oncurves & bcps)
+        as a list of tuples of tuples
+        [
+            ((x0, y0), (x1, y1), (x2, y2), (x3, y3)),
+            ((x4, y4), (x5, y5), (x6, y6), (x7, y7)),
+            ...
+        ]
+
+        **Actual points are returned, not positions**
+        """
+        selectedPoints = []
+        for index, selectedSegments in self.selectedContours.items():
+            currentContour = self.glyph[index]
+            for segment in selectedSegments:
+                selectedOnCurves = [point for point in segment.points if point.type != "offcurve"]
+                selectedOffCurves = [point for point in segment.points if point.type == "offcurve"]
+
+                # If no selectedOffCurves, it's a straight line, so ignore
+                if not selectedOffCurves:
+                    continue
+
+                pt0 = hf.findPrevPt(selectedOnCurves[0], currentContour)
+                pt1 = selectedOnCurves[0]
+                pt2 = selectedOffCurves[0]
+                pt3 = selectedOffCurves[1]
+
+                selectedPoints.append((pt0, pt1, pt2, pt3))
+        return selectedPoints
+
+    def _keepSegmentSelected(self):
+        """
+        Keep segment selected when click point is w/in
+        line connecting bcps
+
+        For now, only do this when 1 segment is selected
+        """
+        if not self.ptsFromSelectedCtrs:
+            return
+        elif len(self.ptsFromSelectedCtrs) != 1:
+            return
+
+        for cluster in self.ptsFromSelectedCtrs:
+            # First 2 items are oncurve positions
+            pt2Pos, pt3Pos = cluster[2].position, cluster[3].position
+
+            if not hf.isPointInLine(self.mouseDownPoint, (pt2Pos, pt3Pos)):
+                continue
+
+            self.canMarquee = False
+            self.lineWeightMultiplier = 4
+
+            for selectedSegments in self.selectedContours.values():
+                for segment in selectedSegments:
+                    segment.selected = True
+
 
 installTool(CheckParallelTool())
