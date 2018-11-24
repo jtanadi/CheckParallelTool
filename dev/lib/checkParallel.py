@@ -193,7 +193,7 @@ class CheckParallelTool(EditingTool):
 
     def _applyTolerance(self, info):
         """
-        Redefine tolerance whenever comToleranceSettingChanged is triggered
+        Redefine tolerance whenever com.ToleranceSettingChanged is triggered
         """
         self.tolerance = hf.readSetting(settingDir)
 
@@ -281,7 +281,7 @@ class CheckParallelTool(EditingTool):
         """
         if not self.ptsFromSelectedCtrs:
             return
-        elif len(self.ptsFromSelectedCtrs) != 1:
+        if len(self.ptsFromSelectedCtrs) != 1:
             return
 
         for cluster in self.ptsFromSelectedCtrs:
