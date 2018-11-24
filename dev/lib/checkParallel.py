@@ -9,16 +9,15 @@ https://ohnotype.co/blog/drawing-vectors
 When active, this tool adds an observer to keep an eye on
 the tolerance setting posted by ToleranceWindow.
 """
-
-import os.path
 from AppKit import NSImage
+import os.path
 
 import mojo.drawingTools as dt
 from mojo.events import EditingTool, installTool, addObserver, removeObserver
 from mojo.UI import UpdateCurrentGlyphView
 
-import utils.helperFuncs as hf
 from toleranceWindow import ToleranceWindow
+import utils.helperFuncs as hf
 
 currentDir = os.path.dirname(__file__)
 settingDir = os.path.join(currentDir, "..", "resources", "toleranceSetting.txt")
