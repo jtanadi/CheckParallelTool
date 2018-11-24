@@ -14,7 +14,7 @@ from mojo.events import postEvent
 import os.path
 
 currentDir = os.path.dirname(__file__)
-settingDir = os.path.join(currentDir, "..", "resources", "toleranceSetting.txt")
+settingDir = os.path.join(currentDir, "..", "..", "resources", "toleranceSetting.txt")
 
 class ToleranceWindow:
     def __init__(self):
@@ -39,10 +39,6 @@ class ToleranceWindow:
                                   alignment="right",
                                   sizeStyle="small")
 
-        self.w.bind("close", self.windowCloseCallback)
-        # Post this event so CheckParallel() can't open 2 ToleranceWindow()
-        postEvent("com.ToleranceWindowOpened")
-        # self.w.open()
         self.w.center()
         self.w.makeKey()
 
@@ -56,13 +52,6 @@ class ToleranceWindow:
         hf.writeSetting(settingDir, toleranceValue)
         postEvent("com.ToleranceSettingChanged")
 
-    def windowCloseCallback(self, sender):
-        """
-        Let CheckParallel() know that ToleranceWindow() has been closed,
-        so CP() will let user open a TW() again.
-        """
-        self.w.close()
-        postEvent("com.ToleranceWindowClosed")
 
 if __name__ == "__main__":
     toleranceWindow = ToleranceWindow()

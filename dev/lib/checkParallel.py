@@ -16,7 +16,7 @@ import mojo.drawingTools as dt
 from mojo.events import EditingTool, installTool, addObserver, removeObserver
 from mojo.UI import UpdateCurrentGlyphView
 
-from toleranceWindow import ToleranceWindow
+from utils.toleranceWindow import ToleranceWindow
 import utils.helperFuncs as hf
 
 currentDir = os.path.dirname(__file__)
@@ -25,16 +25,20 @@ iconFileDir = os.path.join(currentDir, "..", "resources", "checkParallelIcon.pdf
 toolbarIcon = NSImage.alloc().initWithContentsOfFile_(iconFileDir)
 
 class CheckParallelTool(EditingTool):
+    def __init__(self):
+        """
+        Instantiate ToleranceWindow()
+        """
+        super().__init__()
+        self.toleranceWindow = ToleranceWindow()
+
     def setup(self):
         """
-        Watch for events posted by ToleranceWindow():
-        - Settings have changed -> run self.applyTolerance()
-        - ToleranceWindow() is open -> toggle switch (prevents 2 windows)
-        - ToleranceWindow() is closed -> toggle switch (to allow open next time)
+        Set up some defaults and watch for
+        event posted by ToleranceWindow()
         """
         self.glyph = CurrentGlyph()
         self.tolerance = hf.readSetting(settingDir)
-        self.toleranceWindow = ToleranceWindow()
 
         self.mouseDownPoint = None
         self.canMarquee = True
