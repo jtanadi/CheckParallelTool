@@ -156,8 +156,6 @@ class CheckParallelTool(EditingTool):
 
         self.glyph.changed()
 
-        super().mouseDragged(point, delta)
-
     def getMarqueRect(self, offset=None, previousRect=False):
         if not self.canMarquee:
             return None
