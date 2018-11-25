@@ -137,13 +137,9 @@ class CheckParallelTool(EditingTool):
             pt2XtoUse = self.pt2Pos[0]
 
         # X = calculated from diff b/w mouse Y and point's Y (slope b/w horizontal and 45deg)
-        # Y = difference b/w mouse Y and point's Y
-        elif 0 < abs(self.slope0) <= 1:
-            pt2XtoUse = (pt2YtoUse - self.intercept0) / self.slope0
-
-        # X = difference b/w mouse X and point's X
         # Y = calculated from diff b/w mouse X and point's X (slope b/w and 45deg and vert)
         else:
+            pt2XtoUse = (pt2YtoUse - self.intercept0) / self.slope0
             pt2YtoUse = self.slope0 * pt2XtoUse + self.intercept0
 
         # Second BCP, same as above
@@ -151,9 +147,8 @@ class CheckParallelTool(EditingTool):
             pt3YtoUse = self.pt3Pos[1]
         elif self.slope1 is None:
             pt3XtoUse = self.pt3Pos[0]
-        elif 0 < abs(self.slope1) <= 1:
-            pt3XtoUse = (pt3YtoUse - self.intercept1) / self.slope1
         else:
+            pt3XtoUse = (pt3YtoUse - self.intercept1) / self.slope1
             pt3YtoUse = self.slope1 * pt3XtoUse + self.intercept1
 
         self.pt2.position = (round(pt2XtoUse), round(pt2YtoUse))
