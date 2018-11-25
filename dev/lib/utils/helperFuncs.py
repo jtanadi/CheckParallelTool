@@ -19,6 +19,20 @@ def readSetting(settingDir):
             settingFile.write(str(tolerance))
     return tolerance
 
+def toggleVizSetting(settingDir):
+    """
+    Read/write value of viz setting file
+    """
+    with open(settingDir, "r") as settingFile:
+        onOff = int(settingFile.read())
+    with open(settingDir, "w") as settingFile:
+        if onOff == 1:
+            settingFile.write("0")
+        else:
+            settingFile.write("1")
+    return onOff == 1
+
+
 def getSlopeAndIntercept(pt1, pt2):
     x0, y0 = pt1
     x1, y1 = pt2
@@ -122,3 +136,10 @@ def writeSetting(settingDir, value):
     """
     with open(settingDir, "w+") as settingFile:
         settingFile.write(str(value))
+
+if __name__ == "__main__":
+    import os.path
+    currentDir = os.path.dirname(__file__)
+    vizSetting = os.path.join(currentDir, "..", "..", "resources", "vizSetting.txt")
+
+    toggleVizSetting(vizSetting)
