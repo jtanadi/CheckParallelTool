@@ -161,13 +161,17 @@ class CheckParallelTool(EditingTool):
 
         self.glyph.changed()
 
-    # def canSelectWithMarque(self):
-    #     return False
+        super().mouseDragged(point, delta)
 
-    # def getMarqueRect(self, offset=None, previousRect=False):
-    #     if not self.canMarquee:
-    #         return None
-    #     return super().getMarqueRect(offset, previousRect)
+    def getMarqueRect(self, offset=None, previousRect=False):
+        if not self.canMarquee:
+            return None
+        return super().getMarqueRect(offset, previousRect)
+
+    def dragSelection(self, point, delta):
+        if not self.canMarquee:
+            return
+        super().dragSelection(point, delta)       
 
     def draw(self, scale):
         """
