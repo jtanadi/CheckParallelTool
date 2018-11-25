@@ -9,72 +9,94 @@ https://ohnotype.co/blog/drawing-vectors
 When active, this tool adds an observer to keep an eye on
 the tolerance setting posted by ToleranceWindow.
 """
-from AppKit import NSImage
 import os.path
 
+from AppKit import NSImage
 import mojo.drawingTools as dt
 from mojo.events import EditingTool, installTool, addObserver, removeObserver
 from mojo.UI import UpdateCurrentGlyphView
 
 from utils.toleranceWindow import ToleranceWindow
+from utils.guideStatusDisplay import GuideStatusDisplay
 import utils.helperFuncs as hf
 
-# "/" key
+# "/" key to turn guide on and off
 KEYCODE = 44
 
 currentDir = os.path.dirname(__file__)
 settingDir = os.path.join(currentDir, "..", "resources", "toleranceSetting.txt")
-iconFileDir = os.path.join(currentDir, "..", "resources", "checkParallelIcon.pdf")
-toolbarIcon = NSImage.alloc().initWithContentsOfFile_(iconFileDir)
 
 class CheckParallelTool(EditingTool):
     def __init__(self):
         """
-        Instantiate ToleranceWindow()
+        Instantiate ToleranceWindow(), GuideStatus()
+        and some default values.
         """
         super().__init__()
         self.toleranceWindow = ToleranceWindow()
-        self.tolerance = hf.readSetting(settingDir)
+        self.guideStatus = GuideStatus()
 
+        self.tolerance = hf.readSetting(settingDir)
         self.glyph = None
-        self.toolIsActive = False
-        self.nonToolShouldDraw = False
-        self.lineWeightMultiplier = 1
-        # Use a dict so we can keep track of what each selectedSegment belongs to
+
+        # Use a dict so we can keep track of
+        # what each selectedSegment belongs to
         self.selectedContours = {}
+        self.ptsFromSelectedCtrs = None
+        self.lineWeightMultiplier = 1
+        self.mouseDownPoint = None
+
+        self.canMarquee = True
+        self.nonToolShouldDraw = False
 
         addObserver(self, "keyDownCB", "keyDown")
 
     def keyDownCB(self, info):
         """
-        When user presses "/" outside of CheckParallelTool(),
+        When user presses "/" with CheckParallelTool() inactive,
         toggle between drawing guides or not.
+
+        Also set the guide status at the bottom right
+        of the glyph view window.
         """
-        if self.toolIsActive:
+        keyCode = info["event"].keyCode()
+        if keyCode != KEYCODE:
             return
 
-        keyCode = info["event"].keyCode()
+        textToUse = ""
+        self.nonToolShouldDraw = not self.nonToolShouldDraw
 
-        if keyCode == KEYCODE:
-            self.nonToolShouldDraw = not self.nonToolShouldDraw
+        if self.nonToolShouldDraw:
+            self.glyph = CurrentGlyph()
+            textToUse = "Parallel guide on"
+            addObserver(self, "draw", "draw")
+            addObserver(self, "updateGlyphCB", "currentGlyphChanged")
+        else:
+            removeObserver(self, "draw")
+            removeObserver(self, "currentGlyphChanged")
 
-            if self.nonToolShouldDraw:
-                self.glyph = CurrentGlyph()
-                addObserver(self, "draw", "draw")
-                addObserver(self, "updateGlyphCB", "currentGlyphChanged")
-            else:
-                removeObserver(self, "draw")
-                removeObserver(self, "currentGlyphChanged")
-
-            UpdateCurrentGlyphView()
+        self.guideStatus.setStatusText(info["view"], textToUse)
+        UpdateCurrentGlyphView()
 
     def updateGlyphCB(self, info):
+        """
+        Update self.glyph when currentGlyphChanged
+        Instead of self.glyph = CurrentGlyph() at draw()
+        """
         self.glyph = info["glyph"]
 
     def getToolbarIcon(self):
+        """
+        Get icon PDF and return to tool
+        """
+        iconFileDir = os.path.join(currentDir, "..", "resources", "checkParallelIcon.pdf")
+        toolbarIcon = NSImage.alloc().initWithContentsOfFile_(iconFileDir)
         return toolbarIcon
 
     def getToolbarTip(self):
+        """
+        Return text that shows up on tool hover
+        """
         return "Check Parallel Tool"
 
     def setup(self):
@@ -83,16 +105,12 @@ class CheckParallelTool(EditingTool):
         event posted by ToleranceWindow()
         """
         self.glyph = CurrentGlyph()
-
-        self.toolIsActive = True
-
-        self.mouseDownPoint = None
-        self.canMarquee = True
-        self.lineWeightMultiplier = 1
-
         addObserver(self, "_applyTolerance", "com.ToleranceSettingChanged")
 
     def becomeInactive(self):
+        """
+        Tool becomes inactive
+        """
         self.toolIsActive = False
         removeObserver(self, "com.ToleranceSettingChanged")
 
@@ -195,11 +213,19 @@ class CheckParallelTool(EditingTool):
         self.glyph.changed()
 
     def getMarqueRect(self, offset=None, previousRect=False):
+        """
+        Return no marquee rectangle when user
+        clicks and drags on the line connecting BCPs
+        """
         if not self.canMarquee:
             return None
         return super().getMarqueRect(offset, previousRect)
 
     def dragSelection(self, point, delta):
+        """
+        Don't drag selection when user clicks
+        and drags on the line connecting BCPs
+        """
         if not self.canMarquee:
             return
         super().dragSelection(point, delta)       
@@ -208,15 +234,15 @@ class CheckParallelTool(EditingTool):
         """
         Draw lines.
 
-        This method is called by both the observer watching "draw"
-        (turned on when "/" is pressed) and by the tool, when it's
-        in use.
+        This method is called by both the observer watching
+        "draw" (turned on when "/" is pressed) and by the tool,
+        when it's active.
 
         When used by the observer, it returns "info", a dict
         from which we need to grab scale. When used by the tool,
         it returns scale, so we can use it right away.
         """
-        # This is for naming...
+        # This is just for naming...
         scale = infoOrScale
         if isinstance(infoOrScale, dict):
             scale = infoOrScale["scale"]
