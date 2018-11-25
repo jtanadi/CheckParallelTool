@@ -19,6 +19,9 @@ from mojo.UI import UpdateCurrentGlyphView
 from utils.toleranceWindow import ToleranceWindow
 import utils.helperFuncs as hf
 
+# "/" key
+KEYCODE = 44
+
 currentDir = os.path.dirname(__file__)
 settingDir = os.path.join(currentDir, "..", "resources", "toleranceSetting.txt")
 iconFileDir = os.path.join(currentDir, "..", "resources", "checkParallelIcon.pdf")
@@ -31,23 +34,42 @@ class CheckParallelTool(EditingTool):
         """
         super().__init__()
         self.toleranceWindow = ToleranceWindow()
-
-    def setup(self):
-        """
-        Set up some defaults and watch for
-        event posted by ToleranceWindow()
-        """
-        self.glyph = CurrentGlyph()
         self.tolerance = hf.readSetting(settingDir)
 
-        self.mouseDownPoint = None
-        self.canMarquee = True
+        self.glyph = None
+        self.toolIsActive = False
+        self.nonToolShouldDraw = False
         self.lineWeightMultiplier = 1
-
         # Use a dict so we can keep track of what each selectedSegment belongs to
         self.selectedContours = {}
 
-        addObserver(self, "_applyTolerance", "com.ToleranceSettingChanged")
+        addObserver(self, "keyDownCB", "keyDown")
+
+    def keyDownCB(self, info):
+        """
+        When user presses "/" outside of CheckParallelTool(),
+        toggle between drawing guides or not.
+        """
+        if self.toolIsActive:
+            return
+
+        keyCode = info["event"].keyCode()
+
+        if keyCode == KEYCODE:
+            self.nonToolShouldDraw = not self.nonToolShouldDraw
+
+            if self.nonToolShouldDraw:
+                self.glyph = CurrentGlyph()
+                addObserver(self, "draw", "draw")
+                addObserver(self, "updateGlyphCB", "currentGlyphChanged")
+            else:
+                removeObserver(self, "draw")
+                removeObserver(self, "currentGlyphChanged")
+
+            UpdateCurrentGlyphView()
+
+    def updateGlyphCB(self, info):
+        self.glyph = info["glyph"]
 
     def getToolbarIcon(self):
         return toolbarIcon
@@ -55,7 +77,23 @@ class CheckParallelTool(EditingTool):
     def getToolbarTip(self):
         return "Check Parallel Tool"
 
+    def setup(self):
+        """
+        Set up some defaults and watch for
+        event posted by ToleranceWindow()
+        """
+        self.glyph = CurrentGlyph()
+
+        self.toolIsActive = True
+
+        self.mouseDownPoint = None
+        self.canMarquee = True
+        self.lineWeightMultiplier = 1
+
+        addObserver(self, "_applyTolerance", "com.ToleranceSettingChanged")
+
     def becomeInactive(self):
+        self.toolIsActive = False
         removeObserver(self, "com.ToleranceSettingChanged")
 
     def mouseDown(self, point, clickCount):
@@ -166,15 +204,28 @@ class CheckParallelTool(EditingTool):
             return
         super().dragSelection(point, delta)       
 
-    def draw(self, scale):
+    def draw(self, infoOrScale):
         """
-        Draw lines
+        Draw lines.
+
+        This method is called by both the observer watching "draw"
+        (turned on when "/" is pressed) and by the tool, when it's
+        in use.
+
+        When used by the observer, it returns "info", a dict
+        from which we need to grab scale. When used by the tool,
+        it returns scale, so we can use it right away.
         """
+        # This is for naming...
+        scale = infoOrScale
+        if isinstance(infoOrScale, dict):
+            scale = infoOrScale["scale"]
+
         self._analyzeSelection()
         self.ptsFromSelectedCtrs = self._getPointsFromSelectedContours()
 
         # Only draw if something has been selected
-        if not self.selectedContours.values():
+        if not self.selectedContours.keys():
             return
 
         for cluster in self.ptsFromSelectedCtrs:
@@ -203,7 +254,7 @@ class CheckParallelTool(EditingTool):
         Look at what's selected and add appropriate segment(s) to
         the self.selectedContours dict.
         We don't explicitly check if a segment is a curve because we don't draw
-        segments without offcurves in drawLines() anyway.
+        segments without offcurves in draw() anyway.
         """
         self.selectedContours.clear()
 
