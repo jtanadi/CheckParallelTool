@@ -1,5 +1,4 @@
-from vanilla import TextBox
-from mojo.canvas import CanvasGroup
+from vanilla import Group, TextBox
 
 class GuideStatusView:
     """
@@ -7,9 +6,9 @@ class GuideStatusView:
     whether parallel guides are on or not
     """
     def __init__(self):
-        self.view = CanvasGroup((0, 0, -0, -0), delegate=self)
+        self.view = Group((0, 0, -0, -0))
         self.view.statusText = TextBox((-120, -30, 100, 22),
-                                       text="Parallel guide on",
+                                       text="⚪️ Parallel Guides",
                                        alignment="right",
                                        sizeStyle="mini")
     def addViewToWindow(self, glyphWindow):
@@ -22,29 +21,13 @@ class GuideStatusView:
         """
         Turn view on
         """
-        if not self.view:
-            return
-        self.view.show(True)
+        self.view.statusText.set("🔵 Parallel Guides")
 
     def turnStatusTextOff(self):
         """
         Turn view off
         """
-        if not self.view:
-            return
-        self.view.show(False)
-
-    def shouldDrawBackground(self):
-        """
-        Don't draw CanvasGroup background
-        """
-        return False
-
-    def acceptsFirstResponder(self):
-        """
-        Make CanvasGroup not interactable
-        """
-        return False
+        self.view.statusText.set("⚪️ Parallel Guides")
 
 
 if __name__ == "__main__":
