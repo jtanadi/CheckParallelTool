@@ -122,10 +122,3 @@ def writeSetting(settingDir, value):
     """
     with open(settingDir, "w+") as settingFile:
         settingFile.write(str(value))
-
-if __name__ == "__main__":
-    import os.path
-    currentDir = os.path.dirname(__file__)
-    vizSetting = os.path.join(currentDir, "..", "..", "resources", "vizSetting.txt")
-
-    toggleVizSetting(vizSetting)
