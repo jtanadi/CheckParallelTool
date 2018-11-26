@@ -1,6 +1,10 @@
 """
-A simple tool to check & visualize if the line connecting handles
+A simple tool to visualize and edit the line connecting BCPs and oncurves.
+
+A simple tool to visualize if the line connecting handles
 and the line connecting on-curve points are parallel.
+
+
 
 Inspired by the What I learned from Rod Cavazos section of
 OHno Type Co's "Drawing Vectors for Type & Lettering":
@@ -14,7 +18,7 @@ import os.path
 from AppKit import NSImage
 import mojo.drawingTools as dt
 from mojo.events import EditingTool, installTool, addObserver, removeObserver
-from mojo.UI import UpdateCurrentGlyphView, CurrentGlyphWindow
+from mojo.UI import UpdateCurrentGlyphView
 
 from utils.toleranceWindow import ToleranceWindow
 from utils.guideStatusView import GuideStatusView
@@ -50,23 +54,26 @@ class CheckParallelTool(EditingTool):
         self.nonToolShouldDraw = False
 
         addObserver(self, "keyDownCB", "keyDown")
+        addObserver(self, "glyphWindowOpenCB", "glyphWindowDidOpen")
+
+    def glyphWindowOpenCB(self, info):
+        """
+        Add guideStatus view to current glyph window
+        """
+        glyphWindow = info["window"]
+        self.guideStatus.addViewToWindow(glyphWindow)
 
     def keyDownCB(self, info):
         """
         When user presses "/" with CheckParallelTool() inactive,
         toggle between drawing guides or not.
 
-        Also set the guide status at the bottom right
-        of the glyph view window.
+        Also set the guide status at the bottom right of the
+        glyph window.
         """
         keyCode = info["event"].keyCode()
         if keyCode != KEYCODE:
             return
-
-        # Get current window and pass it to GuideStatusDisplay()
-        # Doing this here instead of adding another observer...
-        glyphWindow = CurrentGlyphWindow()
-        self.guideStatus.addViewToWindow(glyphWindow)
 
         self.nonToolShouldDraw = not self.nonToolShouldDraw
 
