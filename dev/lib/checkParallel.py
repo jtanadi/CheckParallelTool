@@ -255,11 +255,18 @@ class CheckParallelTool(EditingTool):
             return
 
         for cluster in self.ptsFromSelectedCtrs:
+            # Don't draw if there are overlapping points
+            # Make a set of point positions and compare lengths
+            clusterPosSet = {point.position for point in cluster}
+            if len(cluster) != len(clusterPosSet):
+                continue
+
             pt0, pt1, pt2, pt3 = cluster[0].position, cluster[1].position,\
                                  cluster[2].position, cluster[3].position
+
             # Parallel-ish lines are green; otherwise, red
             if hf.areTheyParallel((pt0, pt1), (pt2, pt3), self.tolerance):
-                dt.stroke(0, 0, 1, 1)
+                dt.stroke(0, 1, 0, 1)
             else:
                 dt.stroke(1, 0, 0, 1)
 
@@ -347,7 +354,7 @@ class CheckParallelTool(EditingTool):
                 pt1 = selectedOnCurves[0]
                 pt2 = selectedOffCurves[0]
                 pt3 = selectedOffCurves[1]
-            
+
                 selectedPoints.append((pt0, pt1, pt2, pt3))
         return selectedPoints
 
