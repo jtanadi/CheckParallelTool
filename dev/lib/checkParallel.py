@@ -280,8 +280,8 @@ class CheckParallelTool(EditingTool):
         Look at what's selected and add appropriate segment(s)
         to the self.selectedContours dict.
 
-        We don't explicitly check if a segment is a curve because we don't draw
--        segments without offcurves in draw() anyway.
+        We don't explicitly check if a segment is a curve because
+        we don't draw segments without offcurves in draw() anyway.
         """
         self.selectedContours.clear()
 

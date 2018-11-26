@@ -11,12 +11,12 @@ class GuideStatusDisplay:
                                   alignment="right",
                                   sizeStyle="mini")
 
-    def setStatusText(self, view, textToSet):
+    def setStatusText(self, currentView, textToSet):
         """
         Set text in TextBox and set TextBox into frame
         """
         self.statusText.set(textToSet)
-        superview = view.enclosingScrollView().superview()
+        superview = currentView.enclosingScrollView().superview()
         view = self.statusText.getNSTextField()
         frame = superview.frame()
         self.statusText._setFrame(frame)
