@@ -14,7 +14,7 @@ import os.path
 from AppKit import NSImage
 import mojo.drawingTools as dt
 from mojo.events import EditingTool, installTool, addObserver, removeObserver
-from mojo.UI import UpdateCurrentGlyphView
+from mojo.UI import UpdateCurrentGlyphView, CurrentGlyphWindow
 
 from utils.toleranceWindow import ToleranceWindow
 from utils.guideStatusDisplay import GuideStatusDisplay
@@ -63,19 +63,23 @@ class CheckParallelTool(EditingTool):
         if keyCode != KEYCODE:
             return
 
-        textToUse = ""
+        # Get current window and pass it to GuideStatusDisplay()
+        # Doing this here instead of adding another observer...
+        glyphWindow = CurrentGlyphWindow()
+        self.guideStatus.addViewToWindow(glyphWindow)
+
         self.nonToolShouldDraw = not self.nonToolShouldDraw
 
         if self.nonToolShouldDraw:
             self.glyph = CurrentGlyph()
-            textToUse = "Parallel guide on"
+            self.guideStatus.turnStatusTextOn()
             addObserver(self, "draw", "draw")
             addObserver(self, "updateGlyphCB", "currentGlyphChanged")
         else:
+            self.guideStatus.turnStatusTextOff()
             removeObserver(self, "draw")
             removeObserver(self, "currentGlyphChanged")
 
-        self.guideStatus.setStatusText(info["view"], textToUse)
         UpdateCurrentGlyphView()
 
     def updateGlyphCB(self, info):

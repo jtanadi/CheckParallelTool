@@ -1,4 +1,5 @@
 from vanilla import TextBox
+from mojo.canvas import CanvasGroup
 
 class GuideStatusDisplay:
     """
@@ -6,18 +7,27 @@ class GuideStatusDisplay:
     the parallel guides are on or not
     """
     def __init__(self):
-        self.statusText = TextBox((-120, -30, 100, 22),
-                                  text="",
-                                  alignment="right",
-                                  sizeStyle="mini")
+        self.view = CanvasGroup((0, 0, -0, -0), delegate=self)
+        self.view.statusText = TextBox((-120, -30, 100, 22),
+                                       text="Parallel guide on",
+                                       alignment="right",
+                                       sizeStyle="mini")
 
-    def setStatusText(self, currentView, textToSet):
-        """
-        Set text in TextBox and set TextBox into frame
-        """
-        self.statusText.set(textToSet)
-        superview = currentView.enclosingScrollView().superview()
-        view = self.statusText.getNSTextField()
-        frame = superview.frame()
-        self.statusText._setFrame(frame)
-        superview.addSubview_(view)
+    def addViewToWindow(self, window):
+        window.addGlyphEditorSubview(self.view)
+
+    def turnStatusTextOn(self):
+        if not self.view:
+            return
+        self.view.show(True)
+
+    def turnStatusTextOff(self):
+        if not self.view:
+            return
+        self.view.show(False)
+
+    def shouldDrawBackground(self):
+        return False
+
+    def acceptsFirstResponder(self):
+        return False
