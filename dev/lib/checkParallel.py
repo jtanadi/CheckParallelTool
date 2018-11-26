@@ -124,15 +124,17 @@ class CheckParallelTool(EditingTool):
         """
         if clickCount == 2:
             self.toleranceWindow.w.open()
-
-        self.ptsFromSelectedCtrs = self._getPointsFromSelectedContours()
-        if len(self.ptsFromSelectedCtrs) != 1:
-            return
-
         # Get positions of mouse & bcps and do some math
         self.mouseDownPoint = point
 
+        self.ptsFromSelectedCtrs = self._getPointsFromSelectedContours()
+        if not self.ptsFromSelectedCtrs:
+            return
+
+        self._keepSegmentSelected()
+
         for cluster in self.ptsFromSelectedCtrs:
+            print(cluster)
             self.pt0, self.pt1, self.pt2, self.pt3 =\
             cluster[0], cluster[1], cluster[2], cluster[3]    
 
@@ -143,8 +145,6 @@ class CheckParallelTool(EditingTool):
 
         self.slope0, self.intercept0 = hf.getSlopeAndIntercept(self.pt0Pos, self.pt2Pos)
         self.slope1, self.intercept1 = hf.getSlopeAndIntercept(self.pt1Pos, self.pt3Pos)
-
-        self._keepSegmentSelected()
 
     def mouseUp(self, point):
         """
@@ -366,24 +366,40 @@ class CheckParallelTool(EditingTool):
 
         For now, only do this when 1 segment is selected
         """
-        if not self.ptsFromSelectedCtrs:
-            return
-        if len(self.ptsFromSelectedCtrs) != 1:
-            return
+        # if not self.ptsFromSelectedCtrs:
+        #     return
+        # if len(self.ptsFromSelectedCtrs) != 1:
+        #     return
+        
+        for selectedSegments in self.selectedContours.values():
+            for segment in selectedSegments:
+                offCurves = [point for point in segment if point.type == "offcurve"]
+                pt0Pos = offCurves[0].position
+                pt1Pos = offCurves[1].position
 
-        for cluster in self.ptsFromSelectedCtrs:
-            # First 2 items are oncurve positions
-            pt2Pos, pt3Pos = cluster[2].position, cluster[3].position
+                if not hf.isPointInLine(self.mouseDownPoint, (pt0Pos, pt1Pos)):
+                    continue
 
-            if not hf.isPointInLine(self.mouseDownPoint, (pt2Pos, pt3Pos)):
-                continue
+                self.canMarquee = False
+                self.lineWeightMultiplier = 4
+                segment.selected = True
+        
+        self._analyzeSelection()
+        self.ptsFromSelectedCtrs = self._getPointsFromSelectedContours()
 
-            self.canMarquee = False
-            self.lineWeightMultiplier = 4
+        # for cluster in self.ptsFromSelectedCtrs:
+        #     # First 2 items are oncurve positions
+        #     pt2Pos, pt3Pos = cluster[2].position, cluster[3].position
 
-            for selectedSegments in self.selectedContours.values():
-                for segment in selectedSegments:
-                    segment.selected = True
+        #     if not hf.isPointInLine(self.mouseDownPoint, (pt2Pos, pt3Pos)):
+        #         continue
+
+        #     self.canMarquee = False
+        #     self.lineWeightMultiplier = 4
+
+        #     for selectedSegments in self.selectedContours.values():
+        #         for segment in selectedSegments:
+        #             segment.selected = True
 
 
 installTool(CheckParallelTool())
