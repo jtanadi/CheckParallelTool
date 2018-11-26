@@ -143,6 +143,7 @@ class CheckParallelTool(EditingTool):
         if not self.ptsFromSelectedCtrs:
             return
 
+        # Not all pts are necessary, but here for consistency
         for cluster in self.ptsFromSelectedCtrs:
             self.pt0, self.pt1, self.pt2, self.pt3 = cluster[0], cluster[1],\
                                                      cluster[2], cluster[3]
