@@ -127,14 +127,19 @@ class CheckParallelTool(EditingTool):
         # Get positions of mouse & bcps and do some math
         self.mouseDownPoint = point
 
+        # Select segment when BCP connection is clicked first,
+        # and then analyze selection for the dictionary
+        # otherwise, everything will be deselected when user clicks
+        # outside of the contours (eg. on the BCP connection)
+        # and we will have no selections to analyze.
+        self._selectSegmentWhenBCPConnectionIsClicked()
+        self._analyzeSelection()
         self.ptsFromSelectedCtrs = self._getPointsFromSelectedContours()
+
         if not self.ptsFromSelectedCtrs:
             return
 
-        self._keepSegmentSelected()
-
         for cluster in self.ptsFromSelectedCtrs:
-            print(cluster)
             self.pt0, self.pt1, self.pt2, self.pt3 =\
             cluster[0], cluster[1], cluster[2], cluster[3]    
 
@@ -150,7 +155,6 @@ class CheckParallelTool(EditingTool):
         """
         Reset some values
         """
-        self._keepSegmentSelected()
         self.mouseDownPoint = None
         self.canMarquee = True
         self.lineWeightMultiplier = 1
@@ -247,11 +251,13 @@ class CheckParallelTool(EditingTool):
         if isinstance(infoOrScale, dict):
             scale = infoOrScale["scale"]
 
+        # Also do these here in case mouseDown isn't fired
+        # (eg. user uses keyboard to select segments)
         self._analyzeSelection()
         self.ptsFromSelectedCtrs = self._getPointsFromSelectedContours()
 
         # Only draw if something has been selected
-        if not self.selectedContours.keys():
+        if not self.ptsFromSelectedCtrs:
             return
 
         for cluster in self.ptsFromSelectedCtrs:
@@ -359,18 +365,14 @@ class CheckParallelTool(EditingTool):
                 selectedPoints.append((pt0, pt1, pt2, pt3))
         return selectedPoints
 
-    def _keepSegmentSelected(self):
+    def _selectSegmentWhenBCPConnectionIsClicked(self):
         """
         Keep segment selected when click point is w/in
         line connecting bcps
 
-        For now, only do this when 1 segment is selected
+        If multiple segments are selected, only one
+        segment will remain selected
         """
-        # if not self.ptsFromSelectedCtrs:
-        #     return
-        # if len(self.ptsFromSelectedCtrs) != 1:
-        #     return
-        
         for selectedSegments in self.selectedContours.values():
             for segment in selectedSegments:
                 offCurves = [point for point in segment if point.type == "offcurve"]
@@ -383,23 +385,6 @@ class CheckParallelTool(EditingTool):
                 self.canMarquee = False
                 self.lineWeightMultiplier = 4
                 segment.selected = True
-        
-        self._analyzeSelection()
-        self.ptsFromSelectedCtrs = self._getPointsFromSelectedContours()
-
-        # for cluster in self.ptsFromSelectedCtrs:
-        #     # First 2 items are oncurve positions
-        #     pt2Pos, pt3Pos = cluster[2].position, cluster[3].position
-
-        #     if not hf.isPointInLine(self.mouseDownPoint, (pt2Pos, pt3Pos)):
-        #         continue
-
-        #     self.canMarquee = False
-        #     self.lineWeightMultiplier = 4
-
-        #     for selectedSegments in self.selectedContours.values():
-        #         for segment in selectedSegments:
-        #             segment.selected = True
 
 
 installTool(CheckParallelTool())
