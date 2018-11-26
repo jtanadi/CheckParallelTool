@@ -144,15 +144,16 @@ class CheckParallelTool(EditingTool):
             return
 
         for cluster in self.ptsFromSelectedCtrs:
-            self.pt0 = cluster[0]
-            self.pt1 = cluster[1]
-            self.pt2 = cluster[2]
-            self.pt3 = cluster[3]
+            self.pt0, self.pt1, self.pt2, self.pt3 = cluster[0], cluster[1],\
+                                                     cluster[2], cluster[3]
 
-        self.slope0, self.intercept0 = hf.getSlopeAndIntercept(self.pt0.position,
-                                                               self.pt2.position)
-        self.slope1, self.intercept1 = hf.getSlopeAndIntercept(self.pt1.position,
-                                                               self.pt3.position)
+        self.pt0Pos, self.pt1Pos = self.pt0.position, self.pt1.position
+        self.pt2Pos, self.pt3Pos = self.pt2.position, self.pt3.position
+
+        self.slope0, self.intercept0 = hf.getSlopeAndIntercept(self.pt0Pos,
+                                                               self.pt2Pos)
+        self.slope1, self.intercept1 = hf.getSlopeAndIntercept(self.pt1Pos,
+                                                               self.pt3Pos)
 
     def mouseUp(self, point):
         """
@@ -176,8 +177,8 @@ class CheckParallelTool(EditingTool):
         if self.mouseDownPoint is None:
             return
 
-        selectedPt2X, selectedPt2Y = self.pt2.position
-        selectedPt3X, selectedPt3Y = self.pt3.position
+        selectedPt2X, selectedPt2Y = self.pt2Pos
+        selectedPt3X, selectedPt3Y = self.pt3Pos
 
         # Differences b/w mousedown point and bcp points
         pt2DiffX = self.mouseDownPoint.x - selectedPt2X
