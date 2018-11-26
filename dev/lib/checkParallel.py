@@ -29,12 +29,12 @@ settingDir = os.path.join(currentDir, "..", "resources", "toleranceSetting.txt")
 class CheckParallelTool(EditingTool):
     def __init__(self):
         """
-        Instantiate ToleranceWindow(), GuideStatus()
+        Instantiate ToleranceWindow(), GuideStatusDisplay()
         and some default values.
         """
         super().__init__()
         self.toleranceWindow = ToleranceWindow()
-        self.guideStatus = GuideStatus()
+        self.guideStatus = GuideStatusDisplay()
 
         self.tolerance = hf.readSetting(settingDir)
         self.glyph = None
@@ -277,10 +277,11 @@ class CheckParallelTool(EditingTool):
 
     def _analyzeSelection(self):
         """
-        Look at what's selected and add appropriate segment(s) to
-        the self.selectedContours dict.
+        Look at what's selected and add appropriate segment(s)
+        to the self.selectedContours dict.
+
         We don't explicitly check if a segment is a curve because we don't draw
-        segments without offcurves in draw() anyway.
+-        segments without offcurves in draw() anyway.
         """
         self.selectedContours.clear()
 
@@ -346,7 +347,7 @@ class CheckParallelTool(EditingTool):
                 pt1 = selectedOnCurves[0]
                 pt2 = selectedOffCurves[0]
                 pt3 = selectedOffCurves[1]
-
+            
                 selectedPoints.append((pt0, pt1, pt2, pt3))
         return selectedPoints
 
