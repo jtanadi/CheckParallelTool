@@ -256,7 +256,8 @@ class CheckParallelTool(EditingTool):
 
         for cluster in self.ptsFromSelectedCtrs:
             # Don't draw if there are overlapping points
-            # Make a set of point positions and compare lengths
+            # The set comprehension will remove duplicate points
+            # ie. cluster tuple & cluster set won't have same lengths
             clusterPosSet = {point.position for point in cluster}
             if len(cluster) != len(clusterPosSet):
                 continue
