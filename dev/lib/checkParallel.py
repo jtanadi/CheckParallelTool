@@ -1,17 +1,16 @@
 """
-A simple tool to visualize and edit the line connecting BCPs and oncurves.
+A simple extension to help with drawing better curves.
+The extension adds a guide and installs a tool.
 
-A simple tool to visualize if the line connecting handles
-and the line connecting on-curve points are parallel.
+Guides are toggled by pressing the "/" key and can be used
+with any tool (EditingTool, ScalingEditTool, etc.)
 
-
+Lines connecting BCPs can be directly edited with the
+Edit Parallel Tool.
 
 Inspired by the What I learned from Rod Cavazos section of
 OHno Type Co's "Drawing Vectors for Type & Lettering":
 https://ohnotype.co/blog/drawing-vectors
-
-When active, this tool adds an observer to keep an eye on
-the tolerance setting posted by ToleranceWindow.
 """
 import os.path
 
