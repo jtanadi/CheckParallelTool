@@ -140,16 +140,15 @@ class CheckParallelTool(EditingTool):
             return
 
         for cluster in self.ptsFromSelectedCtrs:
-            self.pt0, self.pt1, self.pt2, self.pt3 =\
-            cluster[0], cluster[1], cluster[2], cluster[3]    
+            self.pt0 = cluster[0]
+            self.pt1 = cluster[1]
+            self.pt2 = cluster[2]
+            self.pt3 = cluster[3]
 
-        self.pt0Pos = self.pt0.position
-        self.pt1Pos = self.pt1.position
-        self.pt2Pos = self.pt2.position
-        self.pt3Pos = self.pt3.position
-
-        self.slope0, self.intercept0 = hf.getSlopeAndIntercept(self.pt0Pos, self.pt2Pos)
-        self.slope1, self.intercept1 = hf.getSlopeAndIntercept(self.pt1Pos, self.pt3Pos)
+        self.slope0, self.intercept0 = hf.getSlopeAndIntercept(self.pt0.position,
+                                                               self.pt2.position)
+        self.slope1, self.intercept1 = hf.getSlopeAndIntercept(self.pt1.position,
+                                                               self.pt3.position)
 
     def mouseUp(self, point):
         """
@@ -173,11 +172,14 @@ class CheckParallelTool(EditingTool):
         if self.mouseDownPoint is None:
             return
 
+        selectedPt2X, selectedPt2Y = self.pt2.position
+        selectedPt3X, selectedPt3Y = self.pt3.position
+
         # Differences b/w mousedown point and bcp points
-        pt2DiffX = self.mouseDownPoint.x - self.pt2Pos[0]
-        pt2DiffY = self.mouseDownPoint.y - self.pt2Pos[1]
-        pt3DiffX = self.mouseDownPoint.x - self.pt3Pos[0]
-        pt3DiffY = self.mouseDownPoint.y - self.pt3Pos[1]
+        pt2DiffX = self.mouseDownPoint.x - selectedPt2X
+        pt2DiffY = self.mouseDownPoint.y - selectedPt2Y
+        pt3DiffX = self.mouseDownPoint.x - selectedPt3X
+        pt3DiffY = self.mouseDownPoint.y - selectedPt3Y
 
         # Calculate now, but some will be overidden below
         pt2XtoUse = point.x - pt2DiffX
@@ -189,12 +191,12 @@ class CheckParallelTool(EditingTool):
         # X = difference b/w mouse X and point's X
         # Y =  point's current Y (horizontal line)
         if self.slope0 == 0:
-            pt2YtoUse = self.pt2Pos[1]
+            pt2YtoUse = selectedPt2Y
 
         # X = point's current X (vertical line)
         # Y = difference b/w mouse Y and point's Y
         elif self.slope0 is None:
-            pt2XtoUse = self.pt2Pos[0]
+            pt2XtoUse = selectedPt2X
 
         # X = calculated from diff b/w mouse Y and point's Y (slope b/w horizontal and 45deg)
         # Y = calculated from diff b/w mouse X and point's X (slope b/w and 45deg and vert)
@@ -204,9 +206,9 @@ class CheckParallelTool(EditingTool):
 
         # Second BCP, same as above
         if self.slope1 == 0:
-            pt3YtoUse = self.pt3Pos[1]
+            pt3YtoUse = selectedPt3Y
         elif self.slope1 is None:
-            pt3XtoUse = self.pt3Pos[0]
+            pt3XtoUse = selectedPt3X
         else:
             pt3XtoUse = (pt3YtoUse - self.intercept1) / self.slope1
             pt3YtoUse = self.slope1 * pt3XtoUse + self.intercept1
