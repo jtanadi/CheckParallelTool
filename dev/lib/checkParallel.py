@@ -53,6 +53,7 @@ class CheckParallelTool(EditingTool):
         self.canMarquee = True
         self.nonToolShouldDraw = False
 
+        # These observers are always watching RF
         addObserver(self, "keyDownCB", "keyDown")
         addObserver(self, "glyphWindowOpenCB", "glyphWindowDidOpen")
 
