@@ -17,7 +17,7 @@ from mojo.events import EditingTool, installTool, addObserver, removeObserver
 from mojo.UI import UpdateCurrentGlyphView, CurrentGlyphWindow
 
 from utils.toleranceWindow import ToleranceWindow
-from utils.guideStatusDisplay import GuideStatusDisplay
+from utils.guideStatusView import GuideStatusView
 import utils.helperFuncs as hf
 
 # "/" key to turn guide on and off
@@ -34,7 +34,7 @@ class CheckParallelTool(EditingTool):
         """
         super().__init__()
         self.toleranceWindow = ToleranceWindow()
-        self.guideStatus = GuideStatusDisplay()
+        self.guideStatus = GuideStatusView()
 
         self.tolerance = hf.readSetting(settingDir)
         self.glyph = None
