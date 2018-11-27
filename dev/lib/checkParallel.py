@@ -1,5 +1,8 @@
 """
 A simple extension to help with drawing better curves.
+Use the extension to check if the line connecting BCPs and oncurves
+are parallel, as well as edit BCPs by manipulating connection lines.
+
 The extension adds observers to draw guides and installs a tool.
 
 Guides are toggled by pressing the "/" key and can be used
@@ -30,7 +33,7 @@ currentDir = os.path.dirname(__file__)
 
 class ParallelGuides:
     """
-    Show parallel guides outside of the EditParallelTool
+    Show parallel guides outside of the EditConnectionLineTool
     This class adds observers that last an entire RF session
     """
     def __init__(self, delegate):
@@ -79,7 +82,7 @@ class ParallelGuides:
         self.delegate.draw(info)
 
 
-class EditParallelTool(EditingTool):
+class EditConnectionLineTool(EditingTool):
     """
     Tool to edit line connecting BCPs
     Works kind of like Tunni tools, but still needs work
@@ -110,7 +113,7 @@ class EditParallelTool(EditingTool):
         """
         Return text that shows up on tool hover
         """
-        return "Check Parallel Tool"
+        return "Edit Connection Line Tool"
 
     def setup(self):
         """
@@ -295,6 +298,6 @@ class EditParallelTool(EditingTool):
 if __name__ == "__main__":
     dwgDelegate = DrawingDelegate()
     parallelGuides = ParallelGuides(dwgDelegate)
-    parallelTool = EditParallelTool(dwgDelegate)
+    parallelTool = EditConnectionLineTool(dwgDelegate)
 
     installTool(parallelTool)
