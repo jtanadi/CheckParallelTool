@@ -36,77 +36,88 @@ def getSlopeAndIntercept(pt0, pt1):
 
     return slope, intercept
 
-def isPointInLine(point, line):
+def makeRectFromTwoPoints(pt0, pt1, width):
     """
-    Check if point is w/in line.
-    "Tolerance" is achieved by drawing a series of
-    parallel lines and testing if point falls on any of them.
+    Return 4 points that make a rectangle
+    pt0 and pt1 are midpoints of opposite sides
+    """
+    pt0x, pt0y = pt0
+    pt1x, pt1y = pt1
 
-    For every iteration, draw 2 lines (one on either side)
+    slope, intercept = getSlopeAndIntercept(pt0, pt1)
 
-    dx/dy formula based on formula to find 4 points of a rectangle
-    when given 2 midpoints of opposite sides: https://bit.ly/2DKKfbL
+    dx = 0
+    dy = 0
+    # Vertical
+    if slope is None:
+        dx = width / 2
+    # Horizontal
+    elif slope == 0:
+        dy = width / 2
+    else:
+        perpSlope = -1 / slope
+        dx = math.sqrt(width**2 / (1 + perpSlope**2)) / 2
+        dy = perpSlope * dx
+
+    ax = round(pt0x - dx)
+    ay = round(pt0y - dy)
+    bx = round(pt1x - dx)
+    by = round(pt1y - dy)
+    cx = round(pt1x + dx)
+    cy = round(pt1y + dy)
+    dx = round(pt0x + dx)
+    dy = round(pt0y + dy)
+
+    return ((ax, ay), (bx, by), (cx, cy), (dx, dy))
+
+def calcAreaOfTriangle(pt0, pt1, pt2):
+    """
+    Return area of triangle defined by 3 points
+    """
+    ax, ay = pt0
+    bx, by = pt1
+    cx, cy = pt2
+
+    return abs((ax * (by - cy) + bx * (cy - ay) + cx * (ay - by)) / 2)
+
+def isPointInLine(point, line, scale):
+    """
+    Check if point is w/in line, with some tolerance.
+
+    "Tolerance" is achieved by drawing a rectangle along
+    the line and testing whether the point is inside or
+    outside of the rectangle.
+
+    More on point-in-rectangle checking here:
+    https://bit.ly/2PYwLQY
     """
     if point is None or line is None:
         return False
 
-    tolerance = 4
-    x, y = round(point.x), round(point.y)
+    # tolerance rect gets larger as user
+    # zooms out, smaller as user zooms in,
+    # to certain sizes
+    if scale >= 2:
+        scale = 2
+    elif scale <= 0.3:
+        scale = 0.3
+
+    tolerance = 10 * scale
     pt0, pt1 = line
-    line0Pt0x, line0Pt0y = pt0
-    line0Pt1x, line0Pt1y = pt1
 
-    # If point is outside of bounds, then obvs not in line
-    if not line0Pt0x < x < line0Pt1x and\
-        not line0Pt0y < y < line0Pt1y:
-        return False
-    line0Slope, line0Intercept = getSlopeAndIntercept(pt0, pt1)
+    clickableRect = makeRectFromTwoPoints(pt0, pt1, tolerance)
+    a = clickableRect[0]
+    b = clickableRect[1]
+    c = clickableRect[2]
+    d = clickableRect[3]
 
-    # Test with main line
-    if y == round(line0Slope * x + line0Intercept):
-        return True
+    rectArea = calcAreaOfTriangle(a, b, c) + calcAreaOfTriangle(a, c, d)
+    triPAB = calcAreaOfTriangle(point, a, b)
+    triPBC = calcAreaOfTriangle(point, b, c)
+    triPCD = calcAreaOfTriangle(point, c, d)
+    triPAD = calcAreaOfTriangle(point, a, d)
 
-    # If that didn't work, test with parallel lines
-    lineIndex = 1
-    for lineIndex in range(tolerance):
-        dx = 0
-        dy = 0
-        # Vertical
-        if line0Slope is None:
-            dx = lineIndex
-        # Horizontal
-        elif line0Slope == 0:
-            dy = lineIndex
-        else:
-            perpSlope = -1 / line0Slope
-            dx = math.sqrt(lineIndex**2 / (1 + perpSlope**2)) / 2
-            dy = perpSlope * dx
-
-        # To the left of line0
-        line1Pt0x = line0Pt0x - dx
-        line1Pt0y = line0Pt0y - dy
-        line1Pt1x = line0Pt1x - dx
-        line1Pt1y = line0Pt1y - dy
-
-        # To the right of line 0
-        line2Pt0x = line0Pt1x + dx
-        line2Pt0y = line0Pt1y + dy
-        line2Pt1x = line0Pt0x + dx
-        line2Pt1y = line0Pt0y + dy
-
-        line1Slope, line1Intercept = getSlopeAndIntercept((line1Pt0x, line1Pt0y),
-                                                          (line1Pt1x, line1Pt1y))
-        line2Slope, line2Intercept = getSlopeAndIntercept((line2Pt0x, line2Pt0y),
-                                                          (line2Pt1x, line2Pt1y))
-
-        # Test with y = mx + b
-        line1Y = round(line1Slope * x + line1Intercept)
-        line2Y = round(line2Slope * x + line2Intercept)
-
-        if y in (line1Y, line2Y):
-            return True
-
-    return False
+    return rectArea == triPAB + triPBC + triPCD + triPAD
 
 def areTheyParallel(line1, line2, tolerance=0):
     """
@@ -168,3 +179,10 @@ def writeSetting(settingDir, value):
     """
     with open(settingDir, "w+") as settingFile:
         settingFile.write(str(value))
+
+if __name__ == "__main__":
+    # print(makeRectFromTwoPoints((20, 20), (100, 100), 6))
+    # print(calcAreaOfTriangle((20, 20), (40, 40), (30, 80)))
+
+    line = ((477, 406), (410, 490))
+    print(isPointInLine((436.518, 455.973), line))

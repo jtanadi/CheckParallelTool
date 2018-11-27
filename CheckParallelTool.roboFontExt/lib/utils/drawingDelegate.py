@@ -16,6 +16,7 @@ class DrawingDelegate:
     """
     def __init__(self):
         self.tolerance = hf.readSetting(settingDir)
+        self.scale = None
         self.selectedContours = {}
         self.ptsFromSelectedCtrs = []
 
@@ -43,13 +44,13 @@ class DrawingDelegate:
         it returns scale, so we can use it right away.
         """
         # This is just for naming...
-        scale = infoOrScale
+        self.scale = infoOrScale
         if isinstance(infoOrScale, dict) and glyph is None:
-            scale = infoOrScale["scale"]
+            self.scale = infoOrScale["scale"]
             glyph = infoOrScale["glyph"]
 
         # Just in case...
-        if glyph is None:
+        if self.scale is None or glyph is None:
             return
 
         # Also do this here in case mouseDown isn't fired
@@ -77,10 +78,10 @@ class DrawingDelegate:
             else:
                 dt.stroke(1, 0, 0, 1)
 
-            dt.strokeWidth(scale)
+            dt.strokeWidth(self.scale)
             dt.line(pt0, pt1)
 
-            dt.strokeWidth(scale * lineWeightMultiplier)
+            dt.strokeWidth(self.scale * lineWeightMultiplier)
             dt.line(pt2, pt3)
 
     def readToleranceSetting(self):
