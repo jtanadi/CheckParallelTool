@@ -9,7 +9,7 @@
 		<key>repository</key>
 		<string>https://github.com/jtanadi/CheckParallelTool</string>
 		<key>summary</key>
-		<string>A tool to check if the line connecting BCPs & oncurves are parallel and edit BCPs by manipulating connection lines.</string>
+		<string>A tool to check if the line connecting BCPs &amp; oncurves are parallel and edit BCPs by manipulating connection lines.</string>
 	</dict>
 	<key>developer</key>
 	<string>Jesen Tanadi</string>
@@ -18,9 +18,9 @@
 	<key>html</key>
 	<false/>
 	<key>launchAtStartUp</key>
-	<integer>1</integer>
+	<integer>0</integer>
 	<key>mainScript</key>
-	<string>checkParallel.py</string>
+	<string></string>
 	<key>name</key>
 	<string>CheckParallelTool</string>
 	<key>requiresVersionMajor</key>
@@ -28,7 +28,7 @@
 	<key>requiresVersionMinor</key>
 	<string>1</string>
 	<key>timeStamp</key>
-	<real>1543277378.5410078</real>
+	<real>1543321005.9551501</real>
 	<key>version</key>
 	<string>0.9.6</string>
 </dict>
