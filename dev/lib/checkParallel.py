@@ -286,7 +286,7 @@ class EditConnectionLineTool(EditingTool):
                 pt0Pos = offCurves[0].position
                 pt1Pos = offCurves[1].position
 
-                # Clickable rect gets smaller as you zoom in
+                # Pass in scale so clickableRect can have variable size
                 if not hf.isPointInLine(self.mouseDownPoint,
                                         (pt0Pos, pt1Pos),
                                         self.delegate.scale):

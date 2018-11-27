@@ -95,7 +95,7 @@ def isPointInLine(point, line, scale):
         return False
 
     # tolerance rect gets larger as user
-    # zooms out, smaller as user zooms in
+    # zooms out, smaller as user zooms in,
     # to certain sizes
     if scale >= 2:
         scale = 2
