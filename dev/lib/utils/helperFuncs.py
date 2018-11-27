@@ -19,9 +19,9 @@ def readSetting(settingDir):
             settingFile.write(str(tolerance))
     return tolerance
 
-def getSlopeAndIntercept(pt1, pt2):
-    x0, y0 = pt1
-    x1, y1 = pt2
+def getSlopeAndIntercept(pt0, pt1):
+    x0, y0 = pt0
+    x1, y1 = pt1
 
     try:
         slope = (y1 - y0) / (x1 - x0)
@@ -36,31 +36,75 @@ def getSlopeAndIntercept(pt1, pt2):
 
     return slope, intercept
 
-def isPointInLine(clickPt, line):
+def isPointInLine(point, line):
     """
-    Check if click point is w/in line
-    drawn between bcps (+ tolerance)
+    Check if point is w/in line.
+
+    "Tolerance" is achieved by drawing a series of
+    parallel lines and testing if point falls on any of them.
+
+    For every iteration, draw 2 lines (one on either side)
     """
-    if clickPt is None or line is None:
-        return
+    if point is None or line is None:
+        return False
 
     tolerance = 4
-    xClick, yClick = clickPt
-    pt1, pt2 = line
-    slope, intercept = getSlopeAndIntercept(pt1, pt2)
+    x, y = round(point.x), round(point.y)
+    pt0, pt1 = line
+    line0Pt0x, line0Pt0y = pt0
+    line0Pt1x, line0Pt1y = pt1
 
-    # Vertical line, so just check if clickPt is within tolerance
-    # of line's x value and between pt1 y and pt2 y
-    if slope is None:
-        return abs(xClick - pt1[0]) <= tolerance\
-            and ((pt1[1] > yClick > pt2[1])\
-            or (pt1[1] < yClick < pt2[1]))
+    # If point is outside of bounds, then obvs not in line
+    if not line0Pt0x < x < line0Pt1x and\
+        not line0Pt0y < y < line0Pt1y:
+        return False
+    line0Slope, line0Intercept = getSlopeAndIntercept(pt0, pt1)
 
-    calculatedY = (slope * xClick) + intercept
+    # Test with main line
+    if y == round(line0Slope * x + line0Intercept):
+        return True
 
-    return abs(yClick - calculatedY) <= tolerance\
-        and ((pt1[0] > xClick > pt2[0])\
-        or (pt1[0] < xClick < pt2[0]))
+    # Test with parallel lines
+    lineIndex = 1
+    for lineIndex in range(tolerance):
+        dx = 0
+        dy = 0
+        # Vertical
+        if line0Slope is None:
+            dx = lineIndex
+        # Horizontal
+        elif line0Slope == 0:
+            dy = lineIndex
+        else:
+            perpSlope = -1 / line0Slope
+            dx = math.sqrt(lineIndex**2 / (1 + perpSlope**2)) / 2
+            dy = perpSlope * dx
+
+        # To the left of line0
+        line1Pt0x = line0Pt0x - dx
+        line1Pt0y = line0Pt0y - dy
+        line1Pt1x = line0Pt1x - dx
+        line1Pt1y = line0Pt1y - dy
+
+        # To the right of line 0
+        line2Pt0x = line0Pt1x + dx
+        line2Pt0y = line0Pt1y + dy
+        line2Pt1x = line0Pt0x + dx
+        line2Pt1y = line0Pt0y + dy
+
+        line1Slope, line1Intercept = getSlopeAndIntercept((line1Pt0x, line1Pt0y),
+                                                          (line1Pt1x, line1Pt1y))
+        line2Slope, line2Intercept = getSlopeAndIntercept((line2Pt0x, line2Pt0y),
+                                                          (line2Pt1x, line2Pt1y))
+
+        # Test with y = mx + b
+        line1Y = round(line1Slope * x + line1Intercept)
+        line2Y = round(line2Slope * x + line2Intercept)
+
+        if y in (line1Y, line2Y):
+            return True
+
+    return False
 
 def areTheyParallel(line1, line2, tolerance=0):
     """

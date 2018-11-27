@@ -151,7 +151,6 @@ class EditConnectionLineTool(EditingTool):
         self._selectSegmentWhenBCPConnectionIsClicked()
         self.delegate.analyzeAndGetPoints(self.glyph)
 
-        print(self.delegate.ptsFromSelectedCtrs)
         if not self.delegate.ptsFromSelectedCtrs:
             return
 
