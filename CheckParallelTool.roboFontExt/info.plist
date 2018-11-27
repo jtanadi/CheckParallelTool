@@ -9,7 +9,7 @@
 		<key>repository</key>
 		<string>https://github.com/jtanadi/CheckParallelTool</string>
 		<key>summary</key>
-		<string>A tool to check if the line connecting BCPs and oncurves are parallel, as well as edit BCPs by manipulating connection lines.</string>
+		<string>A tool to check if the line connecting BCPs & oncurves are parallel and edit BCPs by manipulating connection lines.</string>
 	</dict>
 	<key>developer</key>
 	<string>Jesen Tanadi</string>
