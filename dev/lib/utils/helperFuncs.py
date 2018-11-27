@@ -39,11 +39,13 @@ def getSlopeAndIntercept(pt0, pt1):
 def isPointInLine(point, line):
     """
     Check if point is w/in line.
-
     "Tolerance" is achieved by drawing a series of
     parallel lines and testing if point falls on any of them.
 
     For every iteration, draw 2 lines (one on either side)
+
+    dx/dy formula based on formula to find 4 points of a rectangle
+    when given 2 midpoints of opposite sides: https://bit.ly/2DKKfbL
     """
     if point is None or line is None:
         return False
@@ -64,7 +66,7 @@ def isPointInLine(point, line):
     if y == round(line0Slope * x + line0Intercept):
         return True
 
-    # Test with parallel lines
+    # If that didn't work, test with parallel lines
     lineIndex = 1
     for lineIndex in range(tolerance):
         dx = 0
