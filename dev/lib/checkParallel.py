@@ -141,7 +141,7 @@ class EditConnectionLineTool(EditingTool):
         if clickCount == 2:
             self.toleranceWindow.w.open()
         # Get positions of mouse & bcps and do some math
-        self.mouseDownPoint = point
+        self.mouseDownPoint = (round(point.x), round(point.y))
 
         # Select segment when BCP connection is clicked first,
         # and then analyze selection for the dictionary
@@ -193,10 +193,10 @@ class EditConnectionLineTool(EditingTool):
         selectedPt3X, selectedPt3Y = self.pt3Pos
 
         # Differences b/w mousedown point and bcp points
-        pt2DiffX = self.mouseDownPoint.x - selectedPt2X
-        pt2DiffY = self.mouseDownPoint.y - selectedPt2Y
-        pt3DiffX = self.mouseDownPoint.x - selectedPt3X
-        pt3DiffY = self.mouseDownPoint.y - selectedPt3Y
+        pt2DiffX = self.mouseDownPoint[0] - selectedPt2X
+        pt2DiffY = self.mouseDownPoint[1] - selectedPt2Y
+        pt3DiffX = self.mouseDownPoint[0] - selectedPt3X
+        pt3DiffY = self.mouseDownPoint[1] - selectedPt3Y
 
         # Calculate now, but some will be overidden below
         pt2XtoUse = point.x - pt2DiffX
@@ -286,7 +286,10 @@ class EditConnectionLineTool(EditingTool):
                 pt0Pos = offCurves[0].position
                 pt1Pos = offCurves[1].position
 
-                if not hf.isPointInLine(self.mouseDownPoint, (pt0Pos, pt1Pos)):
+                # Clickable rect gets smaller as you zoom in
+                if not hf.isPointInLine(self.mouseDownPoint,
+                                        (pt0Pos, pt1Pos),
+                                        self.delegate.scale):
                     continue
 
                 self.canMarquee = False
