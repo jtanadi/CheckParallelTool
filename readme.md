@@ -6,7 +6,8 @@ The extension draws guidelines and installs its own editing tool.
 ![animated demo](https://github.com/jtanadi/CheckParallelTool/blob/master/z-misc/demo4_181127.gif "animated demo")
 
 ## How to use
-Guides are toggled on/off by pressing the "/" key and can be used with any tool (EditingTool, ScalingEditTool, etc.). Guide visibility is shown at the bottom right corner of the glyph window.
+Guides are toggled on/off by pressing the "/" key and can be used with any tool (EditingTool, ScalingEditTool, etc.).  
+Guide visibility is shown at the bottom right corner of the glyph window.
 ![guides demo](https://github.com/jtanadi/CheckParallelTool/blob/master/z-misc/demo5_181127.gif "animated demo")
 
 Similar to other Tunni tools, the Edit Connection Line Tool allows users to edit BCPs by manipulating the line between them.
