@@ -181,8 +181,6 @@ class EditConnectionLineTool(EditingTool):
         Do some math and figure out where BCPs should
         go as the mouse is being dragged around.
         """
-        print("point: ", point.x, point.y)
-        print("delta: ", delta.x, delta.y)
         self.glyph.prepareUndo("Move handles")
 
         # For now, only allow editing when one segment is selected

@@ -36,60 +36,23 @@ def getSlopeAndIntercept(pt0, pt1):
 
     return slope, intercept
 
-def makeRectFromTwoPoints(pt0, pt1, width):
+def getDistance(pt0, pt1):
     """
-    Return 4 points that make a rectangle
-    pt0 and pt1 are midpoints of opposite sides
+    Return distance between two points
     """
-    pt0x, pt0y = pt0
-    pt1x, pt1y = pt1
-
-    slope, intercept = getSlopeAndIntercept(pt0, pt1)
-
-    dx = 0
-    dy = 0
-    # Vertical
-    if slope is None:
-        dx = width / 2
-    # Horizontal
-    elif slope == 0:
-        dy = width / 2
-    else:
-        perpSlope = -1 / slope
-        dx = math.sqrt(width**2 / (1 + perpSlope**2)) / 2
-        dy = perpSlope * dx
-
-    ax = round(pt0x - dx)
-    ay = round(pt0y - dy)
-    bx = round(pt1x - dx)
-    by = round(pt1y - dy)
-    cx = round(pt1x + dx)
-    cy = round(pt1y + dy)
-    dx = round(pt0x + dx)
-    dy = round(pt0y + dy)
-
-    return ((ax, ay), (bx, by), (cx, cy), (dx, dy))
-
-def calcAreaOfTriangle(pt0, pt1, pt2):
-    """
-    Return area of triangle defined by 3 points
-    """
-    ax, ay = pt0
-    bx, by = pt1
-    cx, cy = pt2
-
-    return abs((ax * (by - cy) + bx * (cy - ay) + cx * (ay - by)) / 2)
+    return math.sqrt(math.sqrt((pt1.x - pt0.x)**2 + (pt1.y - pt0.y)**2))
 
 def isPointInLine(point, line, scale):
     """
     Check if point is w/in line, with some tolerance.
 
-    "Tolerance" is achieved by drawing a rectangle along
-    the line and testing whether the point is inside or
-    outside of the rectangle.
+    "Tolerance" is achieved by testing whether the
+    distance b/w the point and either end of the line
+    is close enough to the length of the line.
 
-    More on point-in-rectangle checking here:
-    https://bit.ly/2PYwLQY
+    Sort of like this idea: https://bit.ly/2PYwLQY
+
+    (Thanks Frederik!)
     """
     if point is None or line is None:
         return False
@@ -105,19 +68,11 @@ def isPointInLine(point, line, scale):
     tolerance = 10 * scale
     pt0, pt1 = line
 
-    clickableRect = makeRectFromTwoPoints(pt0, pt1, tolerance)
-    a = clickableRect[0]
-    b = clickableRect[1]
-    c = clickableRect[2]
-    d = clickableRect[3]
+    lineLength = getDistance(pt0, pt1)
+    distance1 = getDistance(point, pt0)
+    distance2 = getDistance(point, pt1)
 
-    rectArea = calcAreaOfTriangle(a, b, c) + calcAreaOfTriangle(a, c, d)
-    triPAB = calcAreaOfTriangle(point, a, b)
-    triPBC = calcAreaOfTriangle(point, b, c)
-    triPCD = calcAreaOfTriangle(point, c, d)
-    triPAD = calcAreaOfTriangle(point, a, d)
-
-    return rectArea == triPAB + triPBC + triPCD + triPAD
+    return abs(distance1 + distance2 - lineLength) < tolerance
 
 def areTheyParallel(line1, line2, tolerance=0):
     """
