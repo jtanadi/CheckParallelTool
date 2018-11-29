@@ -181,6 +181,8 @@ class EditConnectionLineTool(EditingTool):
         Do some math and figure out where BCPs should
         go as the mouse is being dragged around.
         """
+        print("point: ", point.x, point.y)
+        print("delta: ", delta.x, delta.y)
         self.glyph.prepareUndo("Move handles")
 
         # For now, only allow editing when one segment is selected
@@ -189,49 +191,41 @@ class EditConnectionLineTool(EditingTool):
         if self.mouseDownPoint is None:
             return
 
-        selectedPt2X, selectedPt2Y = self.pt2Pos
-        selectedPt3X, selectedPt3Y = self.pt3Pos
+        bcp0X, bcp0Y = self.pt2Pos
+        bcp1X, bcp1y = self.pt3Pos
 
-        # Differences b/w mousedown point and bcp points
-        pt2DiffX = self.mouseDownPoint[0] - selectedPt2X
-        pt2DiffY = self.mouseDownPoint[1] - selectedPt2Y
-        pt3DiffX = self.mouseDownPoint[0] - selectedPt3X
-        pt3DiffY = self.mouseDownPoint[1] - selectedPt3Y
-
-        # Calculate now, but some will be overidden below
-        pt2XtoUse = point.x - pt2DiffX
-        pt2YtoUse = point.y - pt2DiffY
-        pt3XtoUse = point.x - pt3DiffX
-        pt3YtoUse = point.y - pt3DiffY
+        # New point = current point + delta (for now)
+        bcp0XtoUse = bcp0X + delta.x
+        bcp0YtoUse = bcp0Y + delta.y
+        bcp1XtoUse = bcp1X + delta.x
+        bcp1YtoUse = bcp1y + delta.y
 
         # First BCP
-        # X = difference b/w mouse X and point's X
-        # Y =  point's current Y (horizontal line)
+        # Horizontal line, so new y == old y
         if self.slope0 == 0:
-            pt2YtoUse = selectedPt2Y
+            bcp0YtoUse = bcp0Y
 
-        # X = point's current X (vertical line)
-        # Y = difference b/w mouse Y and point's Y
+        # Vertical line, so new x == old x
         elif self.slope0 is None:
-            pt2XtoUse = selectedPt2X
+            bcp0XtoUse = bcp0X
 
-        # X = calculated from diff b/w mouse Y and point's Y (slope b/w horizontal and 45deg)
-        # Y = calculated from diff b/w mouse X and point's X (slope b/w and 45deg and vert)
+        # Angled line, use y=mx+b to find out new x & y,
+        # using x, y calculated above... this seems weird.
         else:
-            pt2XtoUse = (pt2YtoUse - self.intercept0) / self.slope0
-            pt2YtoUse = self.slope0 * pt2XtoUse + self.intercept0
+            bcp0XtoUse = (bcp0YtoUse - self.intercept0) / self.slope0
+            bcp0YtoUse = self.slope0 * bcp0XtoUse + self.intercept0
 
         # Second BCP, same as above
         if self.slope1 == 0:
-            pt3YtoUse = selectedPt3Y
+            bcp1YtoUse = bcp1y
         elif self.slope1 is None:
-            pt3XtoUse = selectedPt3X
+            bcp1XtoUse = bcp1X
         else:
-            pt3XtoUse = (pt3YtoUse - self.intercept1) / self.slope1
-            pt3YtoUse = self.slope1 * pt3XtoUse + self.intercept1
+            bcp1XtoUse = (bcp1YtoUse - self.intercept1) / self.slope1
+            bcp1YtoUse = self.slope1 * bcp1XtoUse + self.intercept1
 
-        self.pt2.position = (round(pt2XtoUse), round(pt2YtoUse))
-        self.pt3.position = (round(pt3XtoUse), round(pt3YtoUse))
+        self.pt2.position = (round(bcp0XtoUse), round(bcp0YtoUse))
+        self.pt3.position = (round(bcp1XtoUse), round(bcp1YtoUse))
 
         self.glyph.changed()
 
