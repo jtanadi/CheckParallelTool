@@ -21,10 +21,10 @@ from AppKit import NSImage
 from mojo.events import EditingTool, installTool, addObserver, removeObserver
 from mojo.UI import UpdateCurrentGlyphView
 
-from utils.drawingDelegate import DrawingDelegate
-from utils.guideStatusView import GuideStatusView
-from utils.toleranceWindow import ToleranceWindow
-import utils.helperFuncs as hf
+from comCheckParallelUtils.drawingDelegate import DrawingDelegate
+from comCheckParallelUtils.guideStatusView import GuideStatusView
+from comCheckParallelUtils.toleranceWindow import ToleranceWindow
+import comCheckParallelUtils.helperFuncs as hf
 
 # "/" key to turn guide on and off
 KEYCODE = 44
