@@ -7,11 +7,11 @@ The CheckParallel tool has an observer
 to notify it to read the setting whenever it changes.
 """
 
-import utils.helperFuncs as hf
+import os.path
 from mojo.UI import ShowHideWindow
 from vanilla import FloatingWindow, Slider, Button, TextBox
 from mojo.events import postEvent
-import os.path
+import comCheckParallelUtils.helperFuncs as hf
 
 currentDir = os.path.dirname(__file__)
 settingDir = os.path.join(currentDir, "..", "..", "resources", "toleranceSetting.txt")

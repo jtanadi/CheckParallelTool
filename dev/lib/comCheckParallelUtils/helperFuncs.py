@@ -40,7 +40,20 @@ def getDistance(pt0, pt1):
     """
     Return distance between two points
     """
-    return math.sqrt(math.sqrt((pt1.x - pt0.x)**2 + (pt1.y - pt0.y)**2))
+    if isinstance(pt0, tuple):
+        pt0x = pt0[0]
+        pt0y = pt0[1]
+    else:
+        pt0x = pt0.x
+        pt0y = pt0.y
+
+    if isinstance(pt1, tuple):
+        pt1x = pt1[0]
+        pt1y = pt1[1]
+    else:
+        pt1x = pt1.x
+        pt1y = pt1.y
+    return math.sqrt(math.sqrt((pt1x - pt0x)**2 + (pt1y - pt0y)**2))
 
 def isPointInLine(point, line, scale):
     """
@@ -80,12 +93,12 @@ def areTheyParallel(line1, line2, tolerance=0):
     line1 and line2 should be a tuple of tuples each: ((x0, y0), (x1, y1))
     tolerance defaults to 0
     """
-    ((x0, y0), (x1, y1)) = line1
-    ((x2, y2), (x3, y3)) = line2
+    p0, p1 = line1
+    p2, p3 = line2
 
     # atan returns rads, so convert to angle
-    angle1 = abs(math.atan2((y1 - y0), (x1 - x0)) * 180 / math.pi)
-    angle2 = abs(math.atan2((y3 - y2), (x3 - x2)) * 180 / math.pi)
+    angle1 = abs(math.atan2((p1.y - p0.y), (p1.x - p0.x)) * 180 / math.pi)
+    angle2 = abs(math.atan2((p3.y - p2.y), (p3.x - p2.x)) * 180 / math.pi)
 
     # instead of checking for absolute equality,
     # allow for some tolerance

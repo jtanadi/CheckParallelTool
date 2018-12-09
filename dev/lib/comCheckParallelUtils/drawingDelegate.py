@@ -4,7 +4,7 @@ Delegate object for drawing
 
 import os.path
 import mojo.drawingTools as dt
-import utils.helperFuncs as hf
+import comCheckParallelUtils.helperFuncs as hf
 
 currentDir = os.path.dirname(__file__)
 settingDir = os.path.join(currentDir, "..", "..", "resources", "toleranceSetting.txt")
@@ -17,19 +17,7 @@ class DrawingDelegate:
     def __init__(self):
         self.tolerance = hf.readSetting(settingDir)
         self.scale = None
-        self.selectedContours = {}
-        self.ptsFromSelectedCtrs = []
-
-    def analyzeAndGetPoints(self, glyph=None):
-        """
-        Analyze selection and get points
-        This method just calls 2 protected methods for easy access
-        """
-        if glyph is None:
-            return
-
-        self._analyzeSelection(glyph)
-        self._getPointsFromSelectedContours(glyph)
+        self._selectedSegments = []
 
     def draw(self, infoOrScale, glyph=None, lineWeightMultiplier=1):
         """
@@ -55,34 +43,20 @@ class DrawingDelegate:
 
         # Also do this here in case mouseDown isn't fired
         # (eg. user uses keyboard to select segments)
-        self.analyzeAndGetPoints(glyph)
+        self._analyzeSelection(glyph)
 
-        # Only draw if something has been selected
-        if not self.ptsFromSelectedCtrs:
-            return
-
-        for cluster in self.ptsFromSelectedCtrs:
-            # Don't draw if there are overlapping points
-            # The set comprehension will remove duplicate points
-            # (ie. tuple & set won't have same lengths)
-            clusterPosSet = {point.position for point in cluster}
-            if len(cluster) != len(clusterPosSet):
-                continue
-
-            pt0, pt1, pt2, pt3 = cluster[0].position, cluster[1].position,\
-                                 cluster[2].position, cluster[3].position
-
-            # Parallel-ish lines are green; otherwise, red
-            if hf.areTheyParallel((pt0, pt1), (pt2, pt3), self.tolerance):
+        for selected in self._selectedSegments:
+            p1, segment = selected
+            h1, h2, p2 = segment
+            if hf.areTheyParallel((p1, p2,), (h1, h2), self.tolerance):
                 dt.stroke(0, 0, 1, 1)
             else:
                 dt.stroke(1, 0, 0, 1)
-
             dt.strokeWidth(self.scale)
-            dt.line(pt0, pt1)
-
+            dt.line((p1.x, p1.y), (p2.x, p2.y))
             dt.strokeWidth(self.scale * lineWeightMultiplier)
-            dt.line(pt2, pt3)
+            dt.line((h1.x, h1.y), (h2.x, h2.y))
+
 
     def readToleranceSetting(self):
         """
@@ -98,71 +72,42 @@ class DrawingDelegate:
         We don't explicitly check if a segment is a curve because
         we don't draw segments without offcurves in draw() anyway.
         """
-        self.selectedContours.clear()
+        # self.selectedContours.clear()
 
         # Find which segments in each contour are selected
+        selection = []
         for contour in glyph:
-            selectedSegments = []
+            segments = contour.segments
+            for i, segment in enumerate(segments):
+                # Look for selected segments
+                if segment.selected and segment.type in ["curve", "qcurve"]:
+                    prevPt = segments[i - 1].onCurve
+                    selection.append((prevPt, segment))
 
-            for segment in contour:
-                if segment.selected:
-                    selectedSegments.append(segment)
+                # No selected segments, look for selected points
+                else:
+                    for point in segment:
+                        prevPt = segments[i - 1].onCurve
 
-                for point in segment:
-                    # Treat offcurve selection normally (only add current segment)
-                    if point.selected and point.type == "offcurve":
-                        selectedSegments.append(segment)
+                        # If bcp is selected, add current segment
+                        if point.selected and point.type == "offcurve":
+                            selection.append((prevPt, segment))
 
-                    # If an oncurve is selected, add current and next segments
-                    # so user can balance pt between 2 segments
-                    elif point.selected:
-                        # If any point adjacent to current point is selected, then
-                        # a segment has been selected, and it's been taken care of above
-                        # This prevents 2 segments from being selected when user
-                        # selects a segment.
-                        if hf.findPrevPt(point, contour).selected\
-                        or hf.findNextPt(point, contour).selected:
-                            continue
+                        # If oncurve pt is selected, add current and NEXT segment
+                        elif point.selected:
+                            # If any point adjacent to current point is selected, then
+                            # a segment has been selected, and it's been taken care of above
+                            # This prevents 2 segments from being selected when user
+                            # selects a segment.
+                            if prevPt.selected or hf.findNextPt(point, contour).selected:
+                                continue
+                            selection.append((prevPt, segment))
 
-                        # If it's the last segment (no next index), add first segment
-                        try:
-                            selectedSegments.append(contour[segment.index + 1])
-                        except IndexError:
-                            selectedSegments.append(contour[0])
+                            # If last segment, no next segment, so add first segment
+                            try:
+                                selection.append((point, segments[i + 1]))
+                            except IndexError:
+                                selection.append((point, segments[0]))
 
-                        selectedSegments.append(segment)
-
-            if selectedSegments:
-                self.selectedContours[contour.index] = selectedSegments
-
-    def _getPointsFromSelectedContours(self, glyph):
-        """
-        Append all selected points (oncurves & bcps)
-        as a list of tuples of tuples in self.ptsFromSelectedCtrs
-        [
-            ((x0, y0), (x1, y1), (x2, y2), (x3, y3)),
-            ((x4, y4), (x5, y5), (x6, y6), (x7, y7)),
-            ...
-        ]
-
-        **Actual points are appended, not positions**
-        """
-        self.ptsFromSelectedCtrs.clear()
-
-        for index, selectedSegments in self.selectedContours.items():
-            currentContour = glyph[index]
-            for segment in selectedSegments:
-                selectedOnCurves = [point for point in segment.points if point.type != "offcurve"]
-                selectedOffCurves = [point for point in segment.points if point.type == "offcurve"]
-
-                # If no selectedOffCurves, it's a straight line, so ignore
-                if not selectedOffCurves:
-                    continue
-
-                pt0 = hf.findPrevPt(selectedOnCurves[0], currentContour)
-                pt1 = selectedOnCurves[0]
-                pt2 = selectedOffCurves[0]
-                pt3 = selectedOffCurves[1]
-
-                self.ptsFromSelectedCtrs.append((pt0, pt1, pt2, pt3))
-
+        if selection != self._selectedSegments:
+            self._selectedSegments = selection
