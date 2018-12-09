@@ -140,4 +140,4 @@ if __name__ == "__main__":
     # print(calcAreaOfTriangle((20, 20), (40, 40), (30, 80)))
 
     line = ((477, 406), (410, 490))
-    print(isPointInLine((436.518, 455.973), line))
+    print(isPointInLine((436.518, 455.973), line, 1))
