@@ -53,7 +53,8 @@ def getDistance(pt0, pt1):
     else:
         pt1x = pt1.x
         pt1y = pt1.y
-    return math.sqrt(math.sqrt((pt1x - pt0x)**2 + (pt1y - pt0y)**2))
+
+    return math.sqrt((pt1x - pt0x)**2 + (pt1y - pt0y)**2)
 
 def isPointInLine(point, line, scale):
     """
@@ -73,19 +74,18 @@ def isPointInLine(point, line, scale):
     # tolerance rect gets larger as user
     # zooms out, smaller as user zooms in,
     # to certain sizes
-    if scale >= 2:
-        scale = 2
+    if scale >= 1.5:
+        scale = 1.5
     elif scale <= 0.3:
         scale = 0.3
 
-    tolerance = 10 * scale
     pt0, pt1 = line
 
     lineLength = getDistance(pt0, pt1)
     distance1 = getDistance(point, pt0)
     distance2 = getDistance(point, pt1)
 
-    return abs(distance1 + distance2 - lineLength) < tolerance
+    return abs(distance1 + distance2 - lineLength) < scale
 
 def areTheyParallel(line1, line2, tolerance=0):
     """
