@@ -67,13 +67,14 @@ class DrawingDelegate:
     def _analyzeSelection(self, glyph):
         """
         Look at what's selected and add appropriate segment(s)
-        to the self.selectedContours dict.
+        to the self._selectedSegments list. Only curved segments
+        are added to list.
 
-        We don't explicitly check if a segment is a curve because
-        we don't draw segments without offcurves in draw() anyway.
+        self._selectedSegments is a list of tuples:
+        [(prevPt, segment), (prevPt, segment), (prevPt, segment)]
+
+        segment is an object that contains 2 bcps and an oncurve pt
         """
-        # self.selectedContours.clear()
-
         # Find which segments in each contour are selected
         selection = []
         for contour in glyph:
@@ -101,13 +102,16 @@ class DrawingDelegate:
                             # selects a segment.
                             if prevPt.selected or hf.findNextPt(point, contour).selected:
                                 continue
-                            selection.append((prevPt, segment))
 
-                            # If last segment, no next segment, so add first segment
                             try:
-                                selection.append((point, segments[i + 1]))
+                                nextSegment = segments[i + 1]
                             except IndexError:
-                                selection.append((point, segments[0]))
+                                nextSegment = segments[0]
+
+                            if segment.type in ["curve", "qcurve"]:
+                                selection.append((prevPt, segment))
+                            if nextSegment.type in ["curve", "qcurve"]:
+                                selection.append((point, nextSegment))
 
         if selection != self._selectedSegments:
             self._selectedSegments = selection
