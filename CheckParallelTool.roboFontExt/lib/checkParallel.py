@@ -140,6 +140,9 @@ class EditConnectionLineTool(EditingTool):
         """
         if clickCount == 2:
             self.toleranceWindow.w.open()
+
+        self.glyph.prepareUndo("Move handles")
+
         # Get positions of mouse & bcps and do some math
         self.mouseDownPoint = (round(point.x), round(point.y))
 
@@ -179,10 +182,11 @@ class EditConnectionLineTool(EditingTool):
         Do some math and figure out where BCPs should
         go as the mouse is being dragged around.
         """
-        self.glyph.prepareUndo("Move handles")
-
-        if self.mouseDownPoint is None or\
-        len(self.delegate._selectedSegments) != 1:
+        # Only manipulate BCPs if one segment is selected
+        # and if user clicks on connection line
+        # (canMarquee is True if user clicks outside of connetion line)
+        if len(self.delegate._selectedSegments) != 1 or\
+        self.canMarquee:
             return
 
         bcp0X, bcp0Y = self.h1Pos
@@ -265,11 +269,10 @@ class EditConnectionLineTool(EditingTool):
         for selected in self.delegate._selectedSegments:
             p1, segment = selected
             h1, h2, p2 = segment
-            if not hf.isPointInLine(self.mouseDownPoint, (h1, h2), self.delegate.scale):
-                continue
-            self.canMarquee = False
-            self.lineWeightMultiplier = 4
-            segment.selected = True
+            if hf.isPointInLine(self.mouseDownPoint, (h1, h2), self.delegate.scale):
+                self.canMarquee = False
+                self.lineWeightMultiplier = 4
+                segment.selected = True
 
 
 if __name__ == "__main__":
