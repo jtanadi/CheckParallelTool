@@ -36,60 +36,37 @@ def getSlopeAndIntercept(pt0, pt1):
 
     return slope, intercept
 
-def makeRectFromTwoPoints(pt0, pt1, width):
+def getDistance(pt0, pt1):
     """
-    Return 4 points that make a rectangle
-    pt0 and pt1 are midpoints of opposite sides
+    Return distance between two points
     """
-    pt0x, pt0y = pt0
-    pt1x, pt1y = pt1
-
-    slope, intercept = getSlopeAndIntercept(pt0, pt1)
-
-    dx = 0
-    dy = 0
-    # Vertical
-    if slope is None:
-        dx = width / 2
-    # Horizontal
-    elif slope == 0:
-        dy = width / 2
+    if isinstance(pt0, tuple):
+        pt0x = pt0[0]
+        pt0y = pt0[1]
     else:
-        perpSlope = -1 / slope
-        dx = math.sqrt(width**2 / (1 + perpSlope**2)) / 2
-        dy = perpSlope * dx
+        pt0x = pt0.x
+        pt0y = pt0.y
 
-    ax = round(pt0x - dx)
-    ay = round(pt0y - dy)
-    bx = round(pt1x - dx)
-    by = round(pt1y - dy)
-    cx = round(pt1x + dx)
-    cy = round(pt1y + dy)
-    dx = round(pt0x + dx)
-    dy = round(pt0y + dy)
+    if isinstance(pt1, tuple):
+        pt1x = pt1[0]
+        pt1y = pt1[1]
+    else:
+        pt1x = pt1.x
+        pt1y = pt1.y
 
-    return ((ax, ay), (bx, by), (cx, cy), (dx, dy))
-
-def calcAreaOfTriangle(pt0, pt1, pt2):
-    """
-    Return area of triangle defined by 3 points
-    """
-    ax, ay = pt0
-    bx, by = pt1
-    cx, cy = pt2
-
-    return abs((ax * (by - cy) + bx * (cy - ay) + cx * (ay - by)) / 2)
+    return math.sqrt((pt1x - pt0x)**2 + (pt1y - pt0y)**2)
 
 def isPointInLine(point, line, scale):
     """
     Check if point is w/in line, with some tolerance.
 
-    "Tolerance" is achieved by drawing a rectangle along
-    the line and testing whether the point is inside or
-    outside of the rectangle.
+    "Tolerance" is achieved by testing whether the
+    distance b/w the point and either end of the line
+    is close enough to the length of the line.
 
-    More on point-in-rectangle checking here:
-    https://bit.ly/2PYwLQY
+    Sort of like this idea: https://bit.ly/2PYwLQY
+
+    (Thanks Frederik!)
     """
     if point is None or line is None:
         return False
@@ -97,27 +74,18 @@ def isPointInLine(point, line, scale):
     # tolerance rect gets larger as user
     # zooms out, smaller as user zooms in,
     # to certain sizes
-    if scale >= 2:
-        scale = 2
+    if scale >= 1.5:
+        scale = 1.5
     elif scale <= 0.3:
         scale = 0.3
 
-    tolerance = 10 * scale
     pt0, pt1 = line
 
-    clickableRect = makeRectFromTwoPoints(pt0, pt1, tolerance)
-    a = clickableRect[0]
-    b = clickableRect[1]
-    c = clickableRect[2]
-    d = clickableRect[3]
+    lineLength = getDistance(pt0, pt1)
+    distance1 = getDistance(point, pt0)
+    distance2 = getDistance(point, pt1)
 
-    rectArea = calcAreaOfTriangle(a, b, c) + calcAreaOfTriangle(a, c, d)
-    triPAB = calcAreaOfTriangle(point, a, b)
-    triPBC = calcAreaOfTriangle(point, b, c)
-    triPCD = calcAreaOfTriangle(point, c, d)
-    triPAD = calcAreaOfTriangle(point, a, d)
-
-    return rectArea == triPAB + triPBC + triPCD + triPAD
+    return abs(distance1 + distance2 - lineLength) < scale
 
 def areTheyParallel(line1, line2, tolerance=0):
     """
@@ -125,12 +93,12 @@ def areTheyParallel(line1, line2, tolerance=0):
     line1 and line2 should be a tuple of tuples each: ((x0, y0), (x1, y1))
     tolerance defaults to 0
     """
-    ((x0, y0), (x1, y1)) = line1
-    ((x2, y2), (x3, y3)) = line2
+    p0, p1 = line1
+    p2, p3 = line2
 
     # atan returns rads, so convert to angle
-    angle1 = abs(math.atan2((y1 - y0), (x1 - x0)) * 180 / math.pi)
-    angle2 = abs(math.atan2((y3 - y2), (x3 - x2)) * 180 / math.pi)
+    angle1 = abs(math.atan2((p1.y - p0.y), (p1.x - p0.x)) * 180 / math.pi)
+    angle2 = abs(math.atan2((p3.y - p2.y), (p3.x - p2.x)) * 180 / math.pi)
 
     # instead of checking for absolute equality,
     # allow for some tolerance
@@ -185,4 +153,4 @@ if __name__ == "__main__":
     # print(calcAreaOfTriangle((20, 20), (40, 40), (30, 80)))
 
     line = ((477, 406), (410, 490))
-    print(isPointInLine((436.518, 455.973), line))
+    print(isPointInLine((436.518, 455.973), line, 1))
