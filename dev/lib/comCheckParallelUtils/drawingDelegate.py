@@ -67,7 +67,8 @@ class DrawingDelegate:
     def _analyzeSelection(self, glyph):
         """
         Look at what's selected and add appropriate segment(s)
-        to the self._selectedSegments list.
+        to the self._selectedSegments list. Only curved segments
+        are added to list.
 
         self._selectedSegments is a list of tuples:
         [(prevPt, segment), (prevPt, segment), (prevPt, segment)]
@@ -102,17 +103,15 @@ class DrawingDelegate:
                             if prevPt.selected or hf.findNextPt(point, contour).selected:
                                 continue
 
-                            if segment.type in ["curve", "qcurve"]:
-                                selection.append((prevPt, segment))
-
                             try:
                                 nextSegment = segments[i + 1]
-                                if nextSegment.type in ["curve", "qcurve"]:
-                                    selection.append((point, segments[i + 1]))
                             except IndexError:
                                 nextSegment = segments[0]
-                                if nextSegment.type in ["curve", "qcurve"]:
-                                    selection.append((point, segments[0]))
+
+                            if segment.type in ["curve", "qcurve"]:
+                                selection.append((prevPt, segment))
+                            if nextSegment.type in ["curve", "qcurve"]:
+                                selection.append((point, nextSegment))
 
         if selection != self._selectedSegments:
             self._selectedSegments = selection
