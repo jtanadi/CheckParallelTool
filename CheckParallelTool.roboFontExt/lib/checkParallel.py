@@ -181,7 +181,8 @@ class EditConnectionLineTool(EditingTool):
         """
         self.glyph.prepareUndo("Move handles")
 
-        if self.mouseDownPoint is None:
+        if self.mouseDownPoint is None or\
+        len(self.delegate._selectedSegments) != 1:
             return
 
         bcp0X, bcp0Y = self.h1Pos
