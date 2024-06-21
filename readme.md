@@ -1,5 +1,5 @@
 # ARCHIVED PROJECT
-This was an RF3 extention that was never updated for RF4. At this point I can no longer update and maintain the project; however, if this is something you would like to do, please let me know (or just submit PRs or fork it).
+This was an RF3 extention that was never updated for RF4. At this point I can no longer update and maintain the project. If this is something you are interested in doing, please let me know and I can transfer ownership. (Alternatively, feel free to fork it.)
 
 # Check Parallel Tool
 A tool to check if the line connecting BCPs & oncurves are parallel, as well as edit BCPs by manipulating connection lines.
